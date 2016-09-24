@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "748999419341",
+    "firebase_url": "https://quelves-phd-iic3380-mg4.firebaseio.com",
+    "project_id": "quelves-phd-iic3380-mg4",
+    "storage_bucket": "quelves-phd-iic3380-mg4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748999419341:android:dce9b2458b4a470d",
+        "android_client_info": {
+          "package_name": "edu.puc.iic3380.mg4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "748999419341-c7qjj5vf10tqhobk0cur954o48ek291g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.puc.iic3380.mg4",
+            "certificate_hash": "EE1A9DCB2A31BF26B5568F0C3820CAA44DE769FA"
+          }
+        },
+        {
+          "client_id": "748999419341-38su6q4sccc3soin9bmt8v8rmn7l33j8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAobUvMY_evaZ_SOj3F8HPO4sm1sOS0wes"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "748999419341-38su6q4sccc3soin9bmt8v8rmn7l33j8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
