@@ -15,12 +15,19 @@ import android.provider.OpenableColumns;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
+
+import edu.puc.iic3380.mg4.R;
+
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -95,11 +102,24 @@ public class StorageClientFragment extends Fragment {
             // Since the URI is to an image, create and show a DialogFragment to display the
             // image to the user.
             FragmentManager fm = getActivity().getSupportFragmentManager();
-            ImageDialogFragment imageDialog = new ImageDialogFragment();
+            ImageViewFragment imageViewFragment = new ImageViewFragment();
             Bundle fragmentArguments = new Bundle();
             fragmentArguments.putParcelable("URI", uri);
-            imageDialog.setArguments(fragmentArguments);
-            imageDialog.show(fm, "image_dialog");
+            imageViewFragment.setArguments(fragmentArguments);
+            FragmentTransaction transaction = fm.beginTransaction();
+
+            // If fragment is already added, replace it.
+            if (fm.findFragmentByTag(ContactsFragment.TAG) != null) {
+                transaction = transaction.replace(edu.puc.iic3380.mg4.R.id.fASFView,
+                        imageViewFragment, null);
+            } else {
+                transaction = transaction.add(R.id.fASFView,
+                        imageViewFragment, imageViewFragment.TAG);
+            }
+            transaction.commit();
+
+
+
         }
         // END_INCLUDE (create_show_image_dialog)
     }
@@ -108,7 +128,8 @@ public class StorageClientFragment extends Fragment {
     /**
      * DialogFragment which displays an image, given a URI.
      */
-    public static class ImageDialogFragment extends DialogFragment {
+    public static class ImageViewFragment extends Fragment {
+        public static final String TAG = "ImageViewFragment";
         private Dialog mDialog;
         private Uri mUri;
 
@@ -116,6 +137,7 @@ public class StorageClientFragment extends Fragment {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             mUri = getArguments().getParcelable("URI");
+            execute();
         }
 
         /** Create a Bitmap from the URI for that image and return it.
@@ -146,15 +168,10 @@ public class StorageClientFragment extends Fragment {
             }
         }
 
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            mDialog = super.onCreateDialog(savedInstanceState);
-            // To optimize for the "lightbox" style layout.  Since we're not actually displaying a
-            // title, remove the bar along the top of the fragment where a dialog title would
-            // normally go.
-            mDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-            final ImageView imageView = new ImageView(getActivity());
-            mDialog.setContentView(imageView);
+        private void execute() {
+
+
+            final ImageView imageView = (ImageView)getActivity().findViewById(R.id.ivPreview);
 
             // BEGIN_INCLUDE (show_image)
             // Loading the image is going to require some sort of I/O, which must occur off the UI
@@ -171,21 +188,11 @@ public class StorageClientFragment extends Fragment {
 
                 @Override
                 protected void onPostExecute(Bitmap bitmap) {
+                    Log.i(TAG, "onPostExecute" + imageView.getId());
                     imageView.setImageBitmap(bitmap);
                 }
             };
             imageLoadAsyncTask.execute(mUri);
-            // END_INCLUDE (show_image)
-
-            return mDialog;
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-            if (getDialog() != null) {
-                getDialog().dismiss();
-            }
         }
 
         /**

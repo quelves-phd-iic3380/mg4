@@ -5,10 +5,10 @@
     tools:context="edu.puc.iic3380.mg4.fragments.SAFViewFragment"
     android:background="@android:color/holo_green_light">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
+    <ImageView
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
-
+        android:layout_width="match_parent"
+        android:visibility="visible"
+        android:id="@+id/ivPreview" />
+    
 </FrameLayout>
