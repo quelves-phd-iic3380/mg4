@@ -172,6 +172,7 @@ public class StorageClientFragment extends Fragment {
 
 
             final ImageView imageView = (ImageView)getActivity().findViewById(R.id.ivPreview);
+            final ImageView ibFirstSelect = (ImageView)getActivity().findViewById(R.id.ibFirstSelect);
 
             // BEGIN_INCLUDE (show_image)
             // Loading the image is going to require some sort of I/O, which must occur off the UI
@@ -190,6 +191,7 @@ public class StorageClientFragment extends Fragment {
                 protected void onPostExecute(Bitmap bitmap) {
                     Log.i(TAG, "onPostExecute" + imageView.getId());
                     imageView.setImageBitmap(bitmap);
+                    ibFirstSelect.setImageBitmap(bitmap);
                 }
             };
             imageLoadAsyncTask.execute(mUri);
