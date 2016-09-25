@@ -93,16 +93,7 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         public void onShowStorageAccess(){
-
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-            // If fragment is already added, replace it.
-            if (getSupportFragmentManager().findFragmentByTag(StorageClientFragment.TAG) != null) {
-                transaction = transaction.replace(R.id.main_container, new StorageClientFragment(), null);
-            } else {
-                transaction = transaction.add(R.id.main_container, new StorageClientFragment(), StorageClientFragment.TAG);
-            }
-            transaction.commit();
+            startActivity(SAFActivity.getIntent(ChatActivity.this));
         }
 
         public void onOpenCamera() {
