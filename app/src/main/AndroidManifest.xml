@@ -22,14 +22,24 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".activities.MainActivity">
+            <!--intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </-intent-filter-->
+        </activity>
+        <activity android:name=".activities.ChatActivity" />
+        <activity android:name=".activities.SAFActivity" />
+        <activity
+            android:name=".activities.ControlCenterActivity"
+            android:label="@string/title_activity_control_center"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="edu.puc.iic3380.mg4.activities.ChatActivity" />
-        <activity android:name="edu.puc.iic3380.mg4.activities.SAFActivity"></activity>
     </application>
 
 </manifest>
