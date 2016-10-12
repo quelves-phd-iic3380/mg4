@@ -19,8 +19,10 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -172,7 +174,10 @@ public class StorageClientFragment extends Fragment {
 
 
             final ImageView imageView = (ImageView)getActivity().findViewById(R.id.ivPreview);
-            final ImageView ibFirstSelect = (ImageView)getActivity().findViewById(R.id.ibFirstSelect);
+            final LinearLayout flSAFSelection = (LinearLayout)getActivity().findViewById(R.id.my_gallery);
+            final ImageView ivToAdd = new ImageView(getActivity().getBaseContext());
+            flSAFSelection.addView(ivToAdd);
+            ivToAdd.setVisibility(View.VISIBLE);
 
             // BEGIN_INCLUDE (show_image)
             // Loading the image is going to require some sort of I/O, which must occur off the UI
@@ -191,7 +196,7 @@ public class StorageClientFragment extends Fragment {
                 protected void onPostExecute(Bitmap bitmap) {
                     Log.i(TAG, "onPostExecute" + imageView.getId());
                     imageView.setImageBitmap(bitmap);
-                    ibFirstSelect.setImageBitmap(bitmap);
+                    ivToAdd.setImageBitmap(bitmap);
                 }
             };
             imageLoadAsyncTask.execute(mUri);
