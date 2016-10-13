@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -33,16 +34,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import edu.puc.iic3380.mg4.R;
 
@@ -67,7 +69,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             "foo@example.com:hello", "bar@example.com:world"
     };
 
-    private boolean login = false;
+    private boolean resignIn = false;
+    private boolean doSignUp = false;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -130,11 +133,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
-                    login = true;
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
                     // User is signed out
-                    login = false;
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
                 // ...
@@ -146,6 +147,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mProfileReference = mFirebaseDatabase.getReference(FIREBASE_KEY_PROFILE);
 
+    }
+
+    public static Intent getIntent(Context context) {
+        Intent intent = new Intent(context, LoginActivity.class);
+        return intent;
     }
 
     @Override
@@ -395,67 +401,153 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mPhone;
         private final String mEmail;
         private final String mPassword;
+        private String mErrorCode;
+        private boolean result;
 
         UserLoginTask(String phone, String email, String password) {
             mPhone = phone;
             mEmail = email;
             mPassword = password;
+            mErrorCode = null;
+            result = false;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
-            try {
-                // Simulate network access.
-                mAuth.signInWithEmailAndPassword(mEmail, mPassword)
-                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                try {
+                    // Simulate network access.
 
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
-                                if (!task.isSuccessful()) {
-                                    Log.w(TAG, "signInWithEmail:failed", task.getException());
-                                    Context context = getApplicationContext();
-                                    Toast.makeText(context, R.string.auth_failed,
-                                            Toast.LENGTH_SHORT).show();
-                                }
-
-                                // ...
-                            }
-                        });
-
-                if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-                    // TODO: register the new account here.
-                    mAuth.createUserWithEmailAndPassword(mEmail, mPassword)
+                    Log.d(TAG, "execute signInWithEmailAndPassword");
+                    mAuth.signInWithEmailAndPassword(mEmail, mPassword)
                             .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                    Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
+                                        @Override
+                                        public void onComplete(@NonNull Task<AuthResult> task) {
+                                            Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+                                            Log.d(TAG, "onComplete::Error code: " + mErrorCode);
+                                            // If sign in fails, display a message to the user. If sign in succeeds
+                                            // the auth state listener will be notified and logic to handle the
+                                            // signed in user can be handled in the listener.
+                                            if (!task.isSuccessful()) {
+                                                // Log.w(TAG, "signInWithEmail:failed", task.getException());
+                                                // Context context = getApplicationContext();
+                                                // Toast.makeText(context, R.string.auth_failed,
+                                                //         Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Log.d(TAG, "Signin without error!");
+                                                resignIn = false;
+                                                doSignUp = false;
+                                                result = true;
+                                            }
 
-                                    // If sign in fails, display a message to the user. If sign in succeeds
-                                    // the auth state listener will be notified and logic to handle the
-                                    // signed in user can be handled in the listener.
-                                    Context context = getApplicationContext();
-                                    if (!task.isSuccessful()) {
-                                        Toast.makeText(context, R.string.auth_failed,
-                                                Toast.LENGTH_SHORT).show();
+                                            // ...
+                                        }
+
                                     }
+                            )
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    if (e instanceof FirebaseAuthException) {
+                                        mErrorCode = ((FirebaseAuthException) e).getErrorCode();
+                                        if (mErrorCode != null) {
+                                            switch (mErrorCode) {
+                                                case "ERROR_WRONG_PASSWORD":
+                                                    resignIn = true;
+                                                    doSignUp = false;
+                                                    result = false;
+                                                    break;
+                                                case "ERROR_INVALID_CREDENTIAL":
+                                                    resignIn = true;
+                                                    doSignUp = false;
+                                                    result = false;
+                                                    break;
+                                                case "ERROR_INVALID_EMAIL":
+                                                    resignIn = true;
+                                                    doSignUp = false;
+                                                    result = false;
+                                                    break;
+                                                case "ERROR_WEAK_PASSWORD":
+                                                    resignIn = true;
+                                                    doSignUp = false;
+                                                    result = false;
+                                                    break;
+                                                case "ERROR_USER_NOT_FOUND":
+                                                    resignIn = false;
+                                                    doSignUp = true;
+                                                    result = false;
+                                                    break;
+                                                default:
+                                                    resignIn = false;
+                                                    doSignUp = false;
+                                                    result = true;
 
-                                    // ...
+                                            }
+                                            //((FirebaseAuthException) e).printStackTrace();
+                                            if (!result) {
+                                                Log.w(TAG, "onFailure:failed", e);
+                                                Context context = getApplicationContext();
+                                                Toast.makeText(context, R.string.auth_failed,
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                            Log.d(TAG, "onFailure::Error code: " + mErrorCode);
+                                        } else {
+                                            Log.d(TAG, "Signin without error!");
+                                            resignIn = false;
+                                            doSignUp = false;
+                                            result = true;
+                                        }
+                                    }
                                 }
                             });
+
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    return false;
                 }
 
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+
+                try {
+                    if (doSignUp) {
+                        Log.d(TAG, "doSignUp::execute createUserWithEmailAndPassword");
+                        // TODO: register the new account here.
+                        mAuth.createUserWithEmailAndPassword(mEmail, mPassword)
+                                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<AuthResult> task) {
+                                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
+
+                                        // If sign in fails, display a message to the user. If sign in succeeds
+                                        // the auth state listener will be notified and logic to handle the
+                                        // signed in user can be handled in the listener.
+                                        Context context = getApplicationContext();
+                                        if (!task.isSuccessful()) {
+                                            Toast.makeText(context, R.string.auth_failed,
+                                                    Toast.LENGTH_SHORT).show();
+
+                                        } else {
+                                            Log.d(TAG, "SignUp without error!");
+                                            resignIn = false;
+                                            doSignUp = false;
+                                            result = true;
+                                        }
+                                        // ...
+                                    }
+                                });
+                    }
+
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    return false;
+                }
+            } else {
+                Log.d(TAG, "User : " + FirebaseAuth.getInstance().getCurrentUser().getEmail() + "Already Authenticated!");
+                resignIn = false;
+                doSignUp = false;
+                result = true;
             }
-
-
-            return true;
+            return result;
         }
 
         @Override
@@ -477,6 +569,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
         }
+    }
+
+    public static void sigout() {
+        FirebaseAuth.getInstance().signOut();
     }
 }
 
