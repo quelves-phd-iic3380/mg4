@@ -27,7 +27,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import edu.puc.iic3380.mg4.R;
-import edu.puc.iic3380.mg4.model.User;
+import edu.puc.iic3380.mg4.model.Contact;
 
 
 /**
@@ -39,13 +39,13 @@ public class ContactsFragment extends Fragment {
 
     public static final int PERMISSIONS_REQUEST_READ_CONTACTS = 101;
 
-    private ArrayList<User> mContacts;
+    private ArrayList<Contact> mContacts;
     private OnContactSelected mListener;
     private ContactsAdapter mAdapter;
     private ListView mContactsListView;
 
     public interface OnContactSelected {
-        void onContactSelected(User user);
+        void onContactSelected(Contact contact);
     }
 
     public ContactsFragment() {}
@@ -89,7 +89,7 @@ public class ContactsFragment extends Fragment {
             // Android version is lesser than 6.0 or the permission is already granted.
             getContacts(getContext(), new ContactsProviderListener() {
                 @Override
-                public void OnContactsReady(ArrayList<User> contacts) {
+                public void OnContactsReady(ArrayList<Contact> contacts) {
                     mContacts = contacts;
                     mAdapter = new ContactsAdapter(getContext(), R.layout.contact_list_item, mContacts);
                     mContactsListView.setAdapter(mAdapter);
@@ -160,7 +160,7 @@ public class ContactsFragment extends Fragment {
     }
 
     public interface ContactsProviderListener{
-        void OnContactsReady(ArrayList<User> users);
+        void OnContactsReady(ArrayList<Contact> contacts);
     }
 
 
@@ -174,7 +174,7 @@ public class ContactsFragment extends Fragment {
      * threads and/or handlers.
      * See <a href="https://developer.android.com/reference/android/os/AsyncTask.html">AsyncTask</a>
      */
-    private static class GetContactsTask extends AsyncTask<String, Void, ArrayList<User>> {
+    private static class GetContactsTask extends AsyncTask<String, Void, ArrayList<Contact>> {
 
         private Context context;
         private ContactsProviderListener listener;
@@ -188,23 +188,23 @@ public class ContactsFragment extends Fragment {
         }
 
         @Override
-        protected ArrayList<User> doInBackground(String... params) {
+        protected ArrayList<Contact> doInBackground(String... params) {
             return getPhoneContacts(context);
         }
 
         @Override
-        protected void onPostExecute(ArrayList<User> users) {
-            listener.OnContactsReady(users);
+        protected void onPostExecute(ArrayList<Contact> contacts) {
+            listener.OnContactsReady(contacts);
         }
 
-        public ArrayList<User> getPhoneContacts(Context context) {
+        public ArrayList<Contact> getPhoneContacts(Context context) {
             if (mResolver == null) mResolver = context.getContentResolver();
-            ArrayList<User> contacts = new ArrayList<>();
+            ArrayList<Contact> contacts = new ArrayList<>();
             Cursor cursor = mResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null,
                     ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
             if(cursor != null && cursor.getCount() != 0 && cursor.moveToFirst()) {
                 do {
-                    User contact = getContact(cursor);
+                    Contact contact = getContact(cursor);
                     if (contact != null) {
                         contacts.add(contact);
                     }
@@ -214,8 +214,8 @@ public class ContactsFragment extends Fragment {
             return contacts;
         }
 
-        private User getContact(Cursor cursor) {
-            User contact = null;
+        private Contact getContact(Cursor cursor) {
+            Contact contact = null;
             String id = cursor.getString(
                     cursor.getColumnIndex(ContactsContract.Contacts._ID));
             if(Integer.parseInt(cursor.getString(cursor.getColumnIndex(
@@ -231,7 +231,7 @@ public class ContactsFragment extends Fragment {
                             ContactsContract.CommonDataKinds.Phone.NUMBER));
                     String name = c.getString(c.getColumnIndex(
                             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    contact = new User.Builder().name(name).phoneNumber(phoneNumber).build();
+                    contact = new Contact.Builder().name(name).phoneNumber(phoneNumber).build();
                     c.close();
                 }
             }
@@ -243,11 +243,11 @@ public class ContactsFragment extends Fragment {
      * Adapter
      */
 
-    private class ContactsAdapter extends ArrayAdapter<User> {
-        private ArrayList<User> mContacts;
+    private class ContactsAdapter extends ArrayAdapter<Contact> {
+        private ArrayList<Contact> mContacts;
         private LayoutInflater mLayoutInflater;
 
-        public ContactsAdapter(Context context, int resource, ArrayList<User> contacts) {
+        public ContactsAdapter(Context context, int resource, ArrayList<Contact> contacts) {
             super(context, resource, contacts);
             mContacts = contacts;
             mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -263,13 +263,13 @@ public class ContactsFragment extends Fragment {
             if (view == null) {
                 view = mLayoutInflater.inflate(R.layout.contact_list_item, parent, false);
             }
-            User user = mContacts.get(position);
+            Contact contact = mContacts.get(position);
 
             TextView nameView = (TextView) view.findViewById(R.id.contact_name);
             TextView phoneView = (TextView) view.findViewById(R.id.contact_phone_number);
 
-            nameView.setText(user.mName);
-            phoneView.setText(user.mPhoneNumber);
+            nameView.setText(contact.mName);
+            phoneView.setText(contact.mPhoneNumber);
 
             return view;
         }

@@ -1,34 +1,22 @@
 package edu.puc.iic3380.mg4.model;
 
 /**
- * Created by quelves on 9/20/16.
+ * Created by quelves on 12/10/2016.
  */
 
 public class User {
-    public final String mName;
-    public final String mPhoneNumber;
+    private String mId;
+    private String mPhone;
+    private String mUsername;
 
-    private User(String name, String phoneNumber) {
-        mName = name;
-        mPhoneNumber = phoneNumber;
+    public User() {
     }
 
-    public static class Builder {
-        private String mName;
-        private String mPhoneNumber;
-
-        public Builder name(String name) {
-            mName = name;
-            return this;
-        }
-
-        public Builder phoneNumber(String phoneNumber) {
-            mPhoneNumber = phoneNumber;
-            return this;
-        }
-
-        public User build() {
-            return new User(mName, mPhoneNumber);
-        }
+    public User(String id, String phone, String username) {
+        this.mId = id;
+        this.mPhone = phone;
+        this.mUsername = username;
     }
+
+
 }
