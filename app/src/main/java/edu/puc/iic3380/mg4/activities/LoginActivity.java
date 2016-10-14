@@ -40,13 +40,17 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.model.User;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -79,6 +83,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     // UI references.
     private AutoCompleteTextView mEmailView;
     private AutoCompleteTextView mPhoneView;
+    private AutoCompleteTextView mUsernameView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -88,8 +93,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference mProfileReference;
-    private static final String FIREBASE_KEY_PROFILE = "profile";
+    private DatabaseReference usersRef;
+    private static final String FIREBASE_KEY_USERS = "users";
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +104,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mPhoneView = (AutoCompleteTextView) findViewById(R.id.phone);
+        mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -123,6 +130,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
+        // Firebase initialization
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
+        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+
         // ...
         mAuth = FirebaseAuth.getInstance();
 
@@ -141,11 +153,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 // ...
             }
         };
-
-
-        // Firebase initialization
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mProfileReference = mFirebaseDatabase.getReference(FIREBASE_KEY_PROFILE);
 
     }
 
@@ -226,10 +233,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailView.setError(null);
         mPasswordView.setError(null);
         mPhoneView.setError(null);
+        mUsernameView.setError(null);
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
+        String username = mUsernameView.getText().toString();
         String phone = mPhoneView.getText().toString();
 
         boolean cancel = false;
@@ -265,6 +274,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             cancel = true;
         }
 
+        // Check for a valid email address.
+        if (TextUtils.isEmpty(username)) {
+            mUsernameView.setError(getString(R.string.error_field_required));
+            focusView = mUsernameView;
+            cancel = true;
+        } else if (!isUsernameValid(username)) {
+            mUsernameView.setError(getString(R.string.error_invalid_username));
+            focusView = mUsernameView;
+            cancel = true;
+        }
+
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
@@ -273,7 +293,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(phone, email, password);
+            mAuthTask = new UserLoginTask(email, password, username, phone);
             mAuthTask.execute((Void) null);
         }
     }
@@ -292,6 +312,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         //TODO: Replace this with your own logic
         return password.length() > 4;
     }
+
+    private boolean isUsernameValid(String username) {
+        //TODO: Replace this with your own logic
+        return username.length() > 4;
+    }
+
 
     /**
      * Shows the progress UI and hides the login form.
@@ -398,17 +424,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mPhone;
-        private final String mEmail;
-        private final String mPassword;
-        private String mErrorCode;
+        private final String email;
+        private final String username;
+        private final String password;
+        private final String phone;
+
+        private String errorCode;
         private boolean result;
 
-        UserLoginTask(String phone, String email, String password) {
-            mPhone = phone;
-            mEmail = email;
-            mPassword = password;
-            mErrorCode = null;
+        UserLoginTask(String email, String password, String username, String phone) {
+
+            this.email = email;
+            this.password = password;
+            this.phone = phone;
+            this.username = username;
+
+            this.errorCode = null;
             result = false;
         }
 
@@ -420,12 +451,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // Simulate network access.
 
                     Log.d(TAG, "execute signInWithEmailAndPassword");
-                    mAuth.signInWithEmailAndPassword(mEmail, mPassword)
+                    mAuth.signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                                         @Override
                                         public void onComplete(@NonNull Task<AuthResult> task) {
                                             Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
-                                            Log.d(TAG, "onComplete::Error code: " + mErrorCode);
+                                            Log.d(TAG, "onComplete::Error code: " + errorCode);
                                             // If sign in fails, display a message to the user. If sign in succeeds
                                             // the auth state listener will be notified and logic to handle the
                                             // signed in user can be handled in the listener.
@@ -450,9 +481,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     if (e instanceof FirebaseAuthException) {
-                                        mErrorCode = ((FirebaseAuthException) e).getErrorCode();
-                                        if (mErrorCode != null) {
-                                            switch (mErrorCode) {
+                                        errorCode = ((FirebaseAuthException) e).getErrorCode();
+                                        if (errorCode != null) {
+                                            switch (errorCode) {
                                                 case "ERROR_WRONG_PASSWORD":
                                                     resignIn = true;
                                                     doSignUp = false;
@@ -491,7 +522,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                                 Toast.makeText(context, R.string.auth_failed,
                                                         Toast.LENGTH_SHORT).show();
                                             }
-                                            Log.d(TAG, "onFailure::Error code: " + mErrorCode);
+                                            Log.d(TAG, "onFailure::Error code: " + errorCode);
                                         } else {
                                             Log.d(TAG, "Signin without error!");
                                             resignIn = false;
@@ -512,7 +543,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     if (doSignUp) {
                         Log.d(TAG, "doSignUp::execute createUserWithEmailAndPassword");
                         // TODO: register the new account here.
-                        mAuth.createUserWithEmailAndPassword(mEmail, mPassword)
+                        mAuth.createUserWithEmailAndPassword(email, password)
                                 .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                                     @Override
                                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -531,6 +562,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                             resignIn = false;
                                             doSignUp = false;
                                             result = true;
+
+                                            //Create User en Firebase
+                                            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                                            user = new User(firebaseUser.getUid(), email, username, phone);
+                                            storeUser(user);
                                         }
                                         // ...
                                     }
@@ -574,5 +610,32 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     public static void sigout() {
         FirebaseAuth.getInstance().signOut();
     }
+
+
+    public void storeUser(User user) {
+
+        if (usersRef.child(user.getUid()).getRef() != null) {
+            usersRef.child(user.getUid()).setValue(user);
+        } else {
+            usersRef.child(user.getUid()).updateChildren(user.toMap());
+        }
+    }
+
+    public class OnInitialDataLoaded implements ValueEventListener {
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                 user = child.getValue(User.class);
+                Log.d(TAG, "user loaded: " + user.toString());
+            }
+        }
+    }
+
+
 }
 

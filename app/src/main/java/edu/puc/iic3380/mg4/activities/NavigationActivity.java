@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -24,16 +25,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
+import edu.puc.iic3380.mg4.model.User;
 
 public class NavigationActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected {
 
+    public static final String TAG = "NavigationActivity";
+
     public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
+
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference usersRef;
+    private static final String FIREBASE_KEY_USERS = "users";
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +73,11 @@ public class NavigationActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        // Firebase initialization
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
+        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
     }
 
     public static Intent getIntent(Context context) {
@@ -174,6 +193,21 @@ public class NavigationActivity extends AppCompatActivity
         ChatSettings chatSettings = new ChatSettings(contact.mName, mPhoneNumber + "-" + contact.mPhoneNumber.replace(" ",""));
         ChatSettings chatSetting2 = new ChatSettings(contact.mName, contact.mPhoneNumber.replace(" ","")+ "-" + mPhoneNumber);
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
+    }
+
+    public class OnInitialDataLoaded implements ValueEventListener {
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                user = child.getValue(User.class);
+                Log.d(TAG, "user loaded: " + user.toString());
+            }
+        }
     }
 
 }
