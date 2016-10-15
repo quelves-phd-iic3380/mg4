@@ -268,8 +268,8 @@ public class ContactsFragment extends Fragment {
             TextView nameView = (TextView) view.findViewById(R.id.contact_name);
             TextView phoneView = (TextView) view.findViewById(R.id.contact_phone_number);
 
-            nameView.setText(contact.mName);
-            phoneView.setText(contact.mPhoneNumber);
+            nameView.setText(contact.name);
+            phoneView.setText(contact.phoneNumber);
 
             return view;
         }

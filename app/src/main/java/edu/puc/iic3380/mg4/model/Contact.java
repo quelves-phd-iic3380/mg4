@@ -1,34 +1,57 @@
 package edu.puc.iic3380.mg4.model;
 
+import java.util.UUID;
+
 /**
  * Created by quelves on 9/20/16.
  */
 
 public class Contact {
-    public final String mName;
-    public final String mPhoneNumber;
+    public final String uid;
+    public final String name;
+    public final String phoneNumber;
 
     private Contact(String name, String phoneNumber) {
-        mName = name;
-        mPhoneNumber = phoneNumber;
+        this(UUID.randomUUID().toString(), name, phoneNumber);
+    }
+
+    public Contact(String uid, String name, String phoneNumber) {
+        this.name = name;
+        this.uid = uid;
+        this.phoneNumber = phoneNumber;
     }
 
     public static class Builder {
-        private String mName;
-        private String mPhoneNumber;
+        private String name;
+        private String phoneNumber;
 
         public Builder name(String name) {
-            mName = name;
+            this.name = name;
             return this;
         }
 
         public Builder phoneNumber(String phoneNumber) {
-            mPhoneNumber = phoneNumber;
+            this.phoneNumber = phoneNumber;
             return this;
         }
 
         public Contact build() {
-            return new Contact(mName, mPhoneNumber);
+            return new Contact(name, phoneNumber);
         }
+
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+
 }

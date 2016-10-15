@@ -33,12 +33,13 @@ import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
+import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
 public class NavigationActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected {
+        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected {
 
     public static final String TAG = "NavigationActivity";
 
@@ -183,6 +184,11 @@ public class NavigationActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onUserContactSelected(Contact contact) {
+
+    }
+
     private boolean hasPhonePermissions() {
         return ContextCompat.checkSelfPermission(this.getBaseContext(), android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED;
     }
@@ -190,8 +196,8 @@ public class NavigationActivity extends AppCompatActivity
     private void startChat(Contact contact) {
         TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.mName, mPhoneNumber + "-" + contact.mPhoneNumber.replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.mName, contact.mPhoneNumber.replace(" ","")+ "-" + mPhoneNumber);
+        ChatSettings chatSettings = new ChatSettings(contact.name, mPhoneNumber + "-" + contact.phoneNumber.replace(" ",""));
+        ChatSettings chatSetting2 = new ChatSettings(contact.name, contact.phoneNumber.replace(" ","")+ "-" + mPhoneNumber);
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
     }
 
