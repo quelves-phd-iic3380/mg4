@@ -26,13 +26,7 @@
     <include layout="@layout/content_navigation" />
 
 
-    <!--android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email" /-->
+
 
     <!--include
         android:id="@+id/inc_tb_bottom"
@@ -56,8 +50,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:id="@+id/action_contacs"
-                android:src="@drawable/mdi_contact"
+                android:src="@drawable/ic_person_black_24dp"
+                android:id="@+id/action_profile"
                 android:background="?attr/colorPrimary"/>
 
             <ImageButton
@@ -65,9 +59,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:src="@drawable/star"
-                android:id="@+id/action_favorites"
+                android:id="@+id/action_contacs"
+                android:src="@drawable/ic_contacts_black_24dp"
                 android:background="?attr/colorPrimary"/>
+
+
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -83,7 +79,7 @@
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:id="@+id/action_settings"
-                android:src="@drawable/settings_box"
+                android:src="@drawable/ic_settings_applications_black_24dp"
                 android:background="?attr/colorPrimary"/>
 
 
