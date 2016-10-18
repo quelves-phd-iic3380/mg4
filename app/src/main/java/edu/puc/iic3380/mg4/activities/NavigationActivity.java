@@ -3,18 +3,15 @@ package edu.puc.iic3380.mg4.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.databinding.DataBindingUtil;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.internal.NavigationMenuItemView;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -32,6 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.databinding.AppBarNavigationBinding;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
@@ -49,14 +47,81 @@ public class NavigationActivity extends AppCompatActivity
     private DatabaseReference usersRef;
     private static final String FIREBASE_KEY_USERS = "users";
     private User user;
+    private AppBarNavigationBinding binding;
+
+    public class NavigationActivityHandler {
+
+
+        public void onClickActionContacts() {
+            Fragment fragment = null;
+            String fragmentTAG = "";
+            FragmentManager fm = getSupportFragmentManager();
+            fragment = new ContactsFragment();
+            fragmentTAG = ContactsFragment.TAG;
+
+            FragmentTransaction transaction = fm.beginTransaction();
+
+            if (fragment != null) {
+                // If fragment is already added, replace it.
+                if (getSupportFragmentManager().findFragmentByTag(ContactsFragment.TAG) != null) {
+                    transaction = transaction.replace(R.id.content_navigation,
+                            fragment, null);
+                } else {
+                    transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
+                            fragment, fragmentTAG);
+                }
+                transaction.commit();
+            }
+        }
+
+        public void onShowStorageAccess(){
+
+        }
+
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tb_top);
+        toolbar.setTitle("MemeticaMe");
+        toolbar.setSubtitle("IIC3380 G4");
         setSupportActionBar(toolbar);
 
+        Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
+
+        //binding = DataBindingUtil.setContentView(this, R.layout.app_bar_navigation);
+        //binding.setHandler(new NavigationActivityHandler());
+
+
+        /*
+        toolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_contacts:
+                        break;
+                    case R.id.action_favorite:
+                        break;
+                    case R.id.action_chats:
+                        break;
+                    case R.id.action_settings:
+                        break;
+
+                }
+
+
+                return true;
+            }
+        });
+
+        toolbarBottom.inflateMenu(R.menu.toolbar_buttom_menu);
+*/
+
+       /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +130,7 @@ public class NavigationActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
-
+*/
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
