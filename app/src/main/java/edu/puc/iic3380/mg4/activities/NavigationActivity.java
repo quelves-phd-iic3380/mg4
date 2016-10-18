@@ -20,6 +20,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -29,7 +31,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
-import edu.puc.iic3380.mg4.databinding.AppBarNavigationBinding;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
@@ -47,37 +48,25 @@ public class NavigationActivity extends AppCompatActivity
     private DatabaseReference usersRef;
     private static final String FIREBASE_KEY_USERS = "users";
     private User user;
-    private AppBarNavigationBinding binding;
 
-    public class NavigationActivityHandler {
+    public void doAction(Fragment fragment) {
+        String fragmentTAG = "";
+        FragmentManager fm = getSupportFragmentManager();
+        fragmentTAG = ContactsFragment.TAG;
 
+        FragmentTransaction transaction = fm.beginTransaction();
 
-        public void onClickActionContacts() {
-            Fragment fragment = null;
-            String fragmentTAG = "";
-            FragmentManager fm = getSupportFragmentManager();
-            fragment = new ContactsFragment();
-            fragmentTAG = ContactsFragment.TAG;
-
-            FragmentTransaction transaction = fm.beginTransaction();
-
-            if (fragment != null) {
-                // If fragment is already added, replace it.
-                if (getSupportFragmentManager().findFragmentByTag(ContactsFragment.TAG) != null) {
-                    transaction = transaction.replace(R.id.content_navigation,
-                            fragment, null);
-                } else {
-                    transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
-                            fragment, fragmentTAG);
-                }
-                transaction.commit();
+        if (fragment != null) {
+            // If fragment is already added, replace it.
+            if (getSupportFragmentManager().findFragmentByTag(ContactsFragment.TAG) != null) {
+                transaction = transaction.replace(R.id.content_navigation,
+                        fragment, null);
+            } else {
+                transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
+                        fragment, fragmentTAG);
             }
+            transaction.commit();
         }
-
-        public void onShowStorageAccess(){
-
-        }
-
     }
 
 
@@ -92,6 +81,13 @@ public class NavigationActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
+        toolbarBottom.findViewById(R.id.action_contacs).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+                doAction(new ContactsFragment());
+            }
+        });
 
         //binding = DataBindingUtil.setContentView(this, R.layout.app_bar_navigation);
         //binding.setHandler(new NavigationActivityHandler());

@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
-
-        <data>
-            <variable
-                name="handler"
-                type="edu.puc.iic3380.mg4.activities.NavigationActivity.NavigationActivityHandler" />
-        </data>
-
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -52,6 +44,7 @@
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
         android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
         app:popupTheme="@style/AppTheme.PopupOverlay">
 
         <LinearLayout
@@ -64,8 +57,8 @@
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:id="@+id/action_contacs"
-                android:onClick="@{() -> handler.onClickActionContacts()}"
-                android:src="@drawable/mdi_contact"/>
+                android:src="@drawable/mdi_contact"
+                android:background="?attr/colorPrimary"/>
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -74,24 +67,25 @@
                 android:layout_weight="1"
                 android:src="@drawable/star"
                 android:id="@+id/action_favorites"
-                android:onClick="@{() -> handler.onClickActionContacts()}"/>
+                android:background="?attr/colorPrimary"/>
 
-            <ImageButton
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:id="@+id/action_chats"
-                android:onClick="@{() -> handler.onClickActionContacts()}"
-                android:src="@drawable/message_text"/>
-            <ImageButton
+                android:src="@drawable/message_text"
+                android:background="?attr/colorPrimary"/>
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:id="@+id/action_settings"
-                android:onClick="@{() -> handler.onClickActionContacts()}"
-                android:src="@drawable/settings_box"/>
+                android:src="@drawable/settings_box"
+                android:background="?attr/colorPrimary"/>
+
 
         </LinearLayout>
 
@@ -101,4 +95,3 @@
 
 
 </android.support.design.widget.CoordinatorLayout>
-</layout>
