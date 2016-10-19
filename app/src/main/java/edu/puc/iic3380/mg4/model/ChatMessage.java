@@ -1,60 +1,83 @@
 package edu.puc.iic3380.mg4.model;
 
+import android.text.style.TtsSpan;
+
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
+
 public class ChatMessage {
-    private String mAuthor;
-    private String mMessage;
-    private String mUuid;
-    private boolean isOwner;
+    private String uid;
+    private String senderId;
+    private String receiverId;
+    private String message;
+    private Date messageDate;
 
     // Java objects used in firebase realtime database must declare an empty constructor
-    public ChatMessage() {}
+    public ChatMessage() {
+        UUID.randomUUID().toString();
 
-    public ChatMessage(String author, String message) {
-        this(author, message, UUID.randomUUID().toString());
+
     }
 
-    public ChatMessage(String author, String message, String uuid) {
-        mAuthor = author;
-        mMessage = message;
-        mUuid = uuid;
+    public ChatMessage(String senderId, String message) {
+        this.senderId = senderId;
+        this.message = message;
+    }
+
+    public ChatMessage(String message, Date messageDate, String receiverId, String senderId) {
+        this();
+        this.message = message;
+        this.messageDate = messageDate;
+        this.receiverId = receiverId;
+        this.senderId = senderId;
     }
 
     public String getMessage() {
-        return mMessage;
+        return message;
     }
 
     public void setMessage(String message) {
-        mMessage = message;
+        this.message = message;
     }
 
-    public String getAuthor() {
-        return mAuthor;
+    public Date getMessageDate() {
+        return messageDate;
     }
 
-    public void setAuthor(String author) {
-        mAuthor = author;
+    public void setMessageDate(Date messageDate) {
+        this.messageDate = messageDate;
     }
 
-    public String getUuid() {
-        return mUuid;
+    public String getReceiverId() {
+        return receiverId;
     }
 
-    public void setUuid(String uuid) {
-        mUuid = uuid;
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
     }
 
-    public boolean isOwner() {
-        return isOwner;
+    public String getSenderId() {
+        return senderId;
     }
 
-    public void setOwner(boolean owner) {
-        isOwner = owner;
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     @Override
     public String toString() {
-        return mMessage;
+        return message;
     }
+
+
 }

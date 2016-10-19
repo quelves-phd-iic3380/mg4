@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.model.Contact;
+import edu.puc.iic3380.mg4.model.User;
 
 
 /**
@@ -41,6 +42,8 @@ public class ContactsFragment extends Fragment {
 
     public static final int PERMISSIONS_REQUEST_READ_CONTACTS = 101;
 
+    private UserContactFragment userContactFragment;
+
     private ArrayList<Contact> mContacts;
     private OnContactSelected mListener;
     private ContactsAdapter mAdapter;
@@ -51,6 +54,9 @@ public class ContactsFragment extends Fragment {
     }
 
     public ContactsFragment() {}
+
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -282,11 +288,15 @@ public class ContactsFragment extends Fragment {
             TextView nameView = (TextView) view.findViewById(R.id.contact_name);
             TextView phoneView = (TextView) view.findViewById(R.id.contact_phone_number);
 
-            nameView.setText(contact.name);
-            phoneView.setText(contact.phoneNumber);
+            nameView.setText(contact.getName());
+            phoneView.setText(contact.getPhoneNumber());
 
             return view;
         }
+    }
+
+    public void assign(UserContactFragment userContactFragment) {
+        this.userContactFragment = userContactFragment;
     }
 
 }

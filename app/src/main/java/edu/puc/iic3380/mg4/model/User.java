@@ -4,6 +4,7 @@ package edu.puc.iic3380.mg4.model;
 import com.google.firebase.database.Exclude;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,10 @@ public class User {
     private String username;
     private String phone;
     private String email;
+
+    private ArrayList<Chat> chats;
+    private ArrayList<Contact> contacts;
+    private ArrayList<Invite> invites;
 
     public User() {
 

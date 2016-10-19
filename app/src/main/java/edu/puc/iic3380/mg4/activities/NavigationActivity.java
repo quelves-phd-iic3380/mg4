@@ -31,14 +31,19 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
+import edu.puc.iic3380.mg4.fragments.UserContactListner;
+import edu.puc.iic3380.mg4.model.Chat;
+import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
 public class NavigationActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected {
+        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected, ChatFragment.OnChatSelected,
+        UserContactListner {
 
     public static final String TAG = "NavigationActivity";
 
@@ -48,22 +53,24 @@ public class NavigationActivity extends AppCompatActivity
     private DatabaseReference usersRef;
     private static final String FIREBASE_KEY_USERS = "users";
     private User user;
+    private ContactsFragment contactsFragment;
+    private UserContactFragment userContactFragment;
 
-    public void doAction(Fragment fragment) {
+    public void doAction(Fragment fragment, String TAG) {
         String fragmentTAG = "";
         FragmentManager fm = getSupportFragmentManager();
-        fragmentTAG = ContactsFragment.TAG;
+
 
         FragmentTransaction transaction = fm.beginTransaction();
 
         if (fragment != null) {
             // If fragment is already added, replace it.
-            if (getSupportFragmentManager().findFragmentByTag(ContactsFragment.TAG) != null) {
+            if (getSupportFragmentManager().findFragmentByTag(TAG) != null) {
                 transaction = transaction.replace(R.id.content_navigation,
                         fragment, null);
             } else {
                 transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
-                        fragment, fragmentTAG);
+                        fragment, TAG);
             }
             transaction.commit();
         }
@@ -80,12 +87,24 @@ public class NavigationActivity extends AppCompatActivity
         toolbar.setSubtitle("IIC3380 G4");
         setSupportActionBar(toolbar);
 
+        contactsFragment = new ContactsFragment();
+        userContactFragment = new UserContactFragment();
+        userContactFragment.assign(contactsFragment);
+
+
         Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
         toolbarBottom.findViewById(R.id.action_contacs).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
-                doAction(new ContactsFragment());
+                doAction(userContactFragment, UserContactFragment.TAG);
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
+                doAction(new ChatFragment(), ChatFragment.TAG);
             }
         });
 
@@ -223,17 +242,30 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     public void onContactSelected(Contact contact) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && hasPhonePermissions()) {
-            requestPermissions(new String[]{android.Manifest.permission.READ_PHONE_STATE}, PERMISSIONS_REQUEST_READ_PHONE_STATE);
-            // After this point you wait for callback in
-            // onRequestPermissionsResult(int, String[], int[]) overriden method
-        } else {
-            startChat(contact);
-        }
+        FragmentManager fm = getSupportFragmentManager();
+        UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
+        userContactFragment.addContact(contact);
+        doAction(new UserContactFragment(), UserContactFragment.TAG);
+    }
+
+    @Override
+    public void addContact(Contact contact) {
+        FragmentManager fm = getSupportFragmentManager();
+        UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
+        fragment.addContact(contact);
     }
 
     @Override
     public void onUserContactSelected(Contact contact) {
+
+    }
+
+    public void onChatSelected(Chat chat) {
+
+    }
+
+
+    public void onChatSelected(ChatMessage chat) {
 
     }
 
@@ -244,8 +276,8 @@ public class NavigationActivity extends AppCompatActivity
     private void startChat(Contact contact) {
         TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.name, mPhoneNumber + "-" + contact.phoneNumber.replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.name, contact.phoneNumber.replace(" ","")+ "-" + mPhoneNumber);
+        ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
+        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
     }
 

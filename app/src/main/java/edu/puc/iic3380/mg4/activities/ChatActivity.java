@@ -68,6 +68,215 @@ public class ChatActivity extends AppCompatActivity {
 
     private Intent cameraIntent;
 
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_chat);
+
+        // We retrieve the chat settings (username and chat room name)
+        mChatSettings = getIntent().getParcelableExtra(KEY_SETTINGS);
+        mChatSettings2 = getIntent().getParcelableExtra(KEY_SETTINGS2);
+
+        TextView tvUser = (TextView)findViewById(R.id.tvUser);
+        tvUser.setText(mChatSettings.getUsername());
+
+        // List configuration
+        mMessageList = new ArrayList<>();
+        //mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mMessageList);
+        //mBinding.listView.setAdapter(mAdapter);
+        mAdapter = new ChatMessagesAdapter(getBaseContext(), android.R.layout.simple_list_item_1, mMessageList);
+        mBinding.lvChat.setAdapter(mAdapter);
+
+        // Data binding initialization
+        mBinding.setMessage(new TextHolder());
+        mBinding.setHandler(new ChatActivityHandler());
+
+        // Firebase initialization
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings.getChatRoom());
+        mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+
+        mChatRoomReference2 = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings2.getChatRoom());
+        mChatRoomReference2.addListenerForSingleValueEvent(new OnInitialDataLoaded2());
+    }
+
+
+
+
+    /**
+     * Listener for loading the initial messages of a chat room.
+     */
+    public class OnInitialDataLoaded implements ValueEventListener {
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                ChatMessage chatMessage = child.getValue(ChatMessage.class);
+
+                //Define
+                //chatMessage.setOwner(true);
+                mMessageList.add(chatMessage);
+            }
+            // Update the UI
+            mAdapter.notifyDataSetChanged();
+
+            scrollToBottom();
+
+            mInitialized = true;
+            mChatRoomReference.addChildEventListener(new OnMessagesChanged());
+            Log.i(CHATTAG, "Chat initialized");
+
+        }
+
+
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.i(CHATTAG, "Could not initialize chat.");
+            // TODO: Inform the user about the error and handle gracefully.
+
+        }
+    }
+
+    public class OnInitialDataLoaded2 implements ValueEventListener {
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                ChatMessage chatMessage = child.getValue(ChatMessage.class);
+                mMessageList.add(chatMessage);
+            }
+            // Update the UI
+            mAdapter.notifyDataSetChanged();
+
+            scrollToBottom();
+
+            mInitialized = true;
+            mChatRoomReference2.addChildEventListener(new OnMessagesChanged());
+            Log.i(CHATTAG, "Chat initialized 2");
+        }
+
+
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.i(CHATTAG, "Could not initialize chat 2.");
+            // TODO: Inform the user about the error and handle gracefully.
+
+        }
+    }
+
+    /**
+     * Listener for updating in real time the chat room's messages, after the initial messages have been loaded.
+     */
+    public class OnMessagesChanged implements ChildEventListener {
+
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            ChatMessage chatMessage = dataSnapshot.getValue(ChatMessage.class);
+            addChatMessage(chatMessage);
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    }
+
+
+    // Static helpers
+
+    public static Intent getIntent(Context context, ChatSettings settings, ChatSettings settings2) {
+        Intent intent = new Intent(context, ChatActivity.class);
+        intent.putExtra(KEY_SETTINGS, settings);
+        intent.putExtra(KEY_SETTINGS2, settings2);
+        return intent;
+    }
+
+
+
+    /**
+     * Adds a chat message to the current list of messages only if it hasn't been previously added.
+     *
+     * @param chatMessage The chat message to add.
+     */
+    private void addChatMessage(ChatMessage chatMessage) {
+        for (ChatMessage message : mMessageList) {
+            if (message.getUid().equals(chatMessage.getUid())) return;
+        }
+
+        mMessageList.add(chatMessage);
+        mAdapter.notifyDataSetChanged();
+
+        scrollToBottom();
+    }
+
+    /**
+     * Scrolls the list view to the bottom.
+     */
+    private void scrollToBottom() {
+        mBinding.lvChat.smoothScrollToPosition(mAdapter.getCount() - 1);
+    }
+
+
+    /**
+     * adapter
+     */
+    private class ChatMessagesAdapter extends ArrayAdapter<ChatMessage> {
+        private List<ChatMessage> mChatMessages;
+        private LayoutInflater mLayoutInflater;
+
+        public ChatMessagesAdapter(Context context, int resource, List<ChatMessage> chatMessages) {
+            super(context, resource, chatMessages);
+            mChatMessages = chatMessages;
+            mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        public void add(ChatMessage chatMessage) {
+            mChatMessages.add(chatMessage);
+        }
+
+        /**
+         * Return the view of a row.
+         */
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = convertView;
+            // Recycle views. Inflate the view only if its not already inflated.
+            if (view == null) {
+                view = mLayoutInflater.inflate(R.layout.chat_list_item, parent, false);
+            }
+            ChatMessage message = mChatMessages.get(position);
+
+
+            TextView tvMessage = (TextView) view.findViewById(R.id.tvMessage);
+
+            if (message.getSenderId().equals(mChatSettings.getUsername())) {
+                tvMessage.setBackgroundColor(Color.GREEN);
+                tvMessage.setGravity(Gravity.RIGHT);
+            }
+
+            tvMessage.setText( message.getMessage());
+
+
+            return view;
+        }
+    }
 
     // Inner classes implementations
 
@@ -204,213 +413,6 @@ public class ChatActivity extends AppCompatActivity {
         public void setText(String text) {
             mText = text;
             notifyPropertyChanged(BR.text);
-        }
-    }
-
-    /**
-     * Listener for loading the initial messages of a chat room.
-     */
-    public class OnInitialDataLoaded implements ValueEventListener {
-
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            for (DataSnapshot child : dataSnapshot.getChildren()) {
-                ChatMessage chatMessage = child.getValue(ChatMessage.class);
-
-                //Define
-                chatMessage.setOwner(true);
-                mMessageList.add(chatMessage);
-            }
-            // Update the UI
-            mAdapter.notifyDataSetChanged();
-
-            scrollToBottom();
-
-            mInitialized = true;
-            mChatRoomReference.addChildEventListener(new OnMessagesChanged());
-            Log.i(CHATTAG, "Chat initialized");
-
-        }
-
-
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            Log.i(CHATTAG, "Could not initialize chat.");
-            // TODO: Inform the user about the error and handle gracefully.
-
-        }
-    }
-
-    public class OnInitialDataLoaded2 implements ValueEventListener {
-
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            for (DataSnapshot child : dataSnapshot.getChildren()) {
-                ChatMessage chatMessage = child.getValue(ChatMessage.class);
-                mMessageList.add(chatMessage);
-            }
-            // Update the UI
-            mAdapter.notifyDataSetChanged();
-
-            scrollToBottom();
-
-            mInitialized = true;
-            mChatRoomReference2.addChildEventListener(new OnMessagesChanged());
-            Log.i(CHATTAG, "Chat initialized 2");
-        }
-
-
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            Log.i(CHATTAG, "Could not initialize chat 2.");
-            // TODO: Inform the user about the error and handle gracefully.
-
-        }
-    }
-
-    /**
-     * Listener for updating in real time the chat room's messages, after the initial messages have been loaded.
-     */
-    public class OnMessagesChanged implements ChildEventListener {
-
-        @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            ChatMessage chatMessage = dataSnapshot.getValue(ChatMessage.class);
-            addChatMessage(chatMessage);
-        }
-
-        @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
-        }
-    }
-
-
-    // Static helpers
-
-    public static Intent getIntent(Context context, ChatSettings settings, ChatSettings settings2) {
-        Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra(KEY_SETTINGS, settings);
-        intent.putExtra(KEY_SETTINGS2, settings2);
-        return intent;
-    }
-
-    // Class implementation
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_chat);
-
-        // We retrieve the chat settings (username and chat room name)
-        mChatSettings = getIntent().getParcelableExtra(KEY_SETTINGS);
-        mChatSettings2 = getIntent().getParcelableExtra(KEY_SETTINGS2);
-
-        TextView tvUser = (TextView)findViewById(R.id.tvUser);
-        tvUser.setText(mChatSettings.getUsername());
-
-        // List configuration
-        mMessageList = new ArrayList<>();
-        //mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mMessageList);
-        //mBinding.listView.setAdapter(mAdapter);
-        mAdapter = new ChatMessagesAdapter(getBaseContext(), android.R.layout.simple_list_item_1, mMessageList);
-        mBinding.lvChat.setAdapter(mAdapter);
-
-        // Data binding initialization
-        mBinding.setMessage(new TextHolder());
-        mBinding.setHandler(new ChatActivityHandler());
-
-        // Firebase initialization
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings.getChatRoom());
-        mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
-
-        mChatRoomReference2 = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings2.getChatRoom());
-        mChatRoomReference2.addListenerForSingleValueEvent(new OnInitialDataLoaded2());
-    }
-
-    /**
-     * Adds a chat message to the current list of messages only if it hasn't been previously added.
-     *
-     * @param chatMessage The chat message to add.
-     */
-    private void addChatMessage(ChatMessage chatMessage) {
-        for (ChatMessage message : mMessageList) {
-            if (message.getUuid().equals(chatMessage.getUuid())) return;
-        }
-
-        mMessageList.add(chatMessage);
-        mAdapter.notifyDataSetChanged();
-
-        scrollToBottom();
-    }
-
-    /**
-     * Scrolls the list view to the bottom.
-     */
-    private void scrollToBottom() {
-        mBinding.lvChat.smoothScrollToPosition(mAdapter.getCount() - 1);
-    }
-
-
-    /**
-     * adapter
-     */
-    private class ChatMessagesAdapter extends ArrayAdapter<ChatMessage> {
-        private List<ChatMessage> mChatMessages;
-        private LayoutInflater mLayoutInflater;
-
-        public ChatMessagesAdapter(Context context, int resource, List<ChatMessage> chatMessages) {
-            super(context, resource, chatMessages);
-            mChatMessages = chatMessages;
-            mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        }
-
-        public void add(ChatMessage chatMessage) {
-            mChatMessages.add(chatMessage);
-        }
-
-        /**
-         * Return the view of a row.
-         */
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            // Recycle views. Inflate the view only if its not already inflated.
-            if (view == null) {
-                view = mLayoutInflater.inflate(R.layout.chat_list_item, parent, false);
-            }
-            ChatMessage message = mChatMessages.get(position);
-
-
-            TextView tvMessage = (TextView) view.findViewById(R.id.tvMessage);
-
-            if (message.getAuthor().equals(mChatSettings.getUsername())) {
-                tvMessage.setBackgroundColor(Color.GREEN);
-                tvMessage.setGravity(Gravity.RIGHT);
-            }
-
-            tvMessage.setText(message.getMessage());
-
-
-            return view;
         }
     }
 

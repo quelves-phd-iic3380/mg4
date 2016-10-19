@@ -19,7 +19,7 @@ import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 
-public class ContactsActivity extends AppCompatActivity implements ContactsFragment.OnContactSelected {
+public class ContactsActivity extends AppCompatActivity {
 
     public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
 
@@ -57,21 +57,6 @@ public class ContactsActivity extends AppCompatActivity implements ContactsFragm
         return intent;
     }
 
-    /**
-     * Called when contact is selected on ContactsFragment.
-     *
-     * @param contact Contact selected.
-     */
-    @Override
-    public void onContactSelected(Contact contact) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && hasPhonePermissions()) {
-            requestPermissions(new String[]{android.Manifest.permission.READ_PHONE_STATE}, PERMISSIONS_REQUEST_READ_PHONE_STATE);
-            // After this point you wait for callback in
-            // onRequestPermissionsResult(int, String[], int[]) overriden method
-        } else {
-            startChat(contact);
-        }
-    }
 
     private boolean hasPhonePermissions() {
         return ContextCompat.checkSelfPermission(this.getBaseContext(), android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED;
@@ -80,8 +65,8 @@ public class ContactsActivity extends AppCompatActivity implements ContactsFragm
     private void startChat(Contact contact) {
         TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.name, mPhoneNumber + "-" + contact.phoneNumber.replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.name, contact.phoneNumber.replace(" ","")+ "-" + mPhoneNumber);
+        ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
+        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
         startActivity(ChatActivity.getIntent(ContactsActivity.this, chatSettings, chatSetting2));
     }
 

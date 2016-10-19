@@ -7,9 +7,13 @@ import java.util.UUID;
  */
 
 public class Contact {
-    public final String uid;
-    public final String name;
-    public final String phoneNumber;
+    private String uid;
+    private String name;
+    private String phoneNumber;
+    private String email;
+
+    public Contact() {
+    }
 
     private Contact(String name, String phoneNumber) {
         this(UUID.randomUUID().toString(), name, phoneNumber);
@@ -18,6 +22,13 @@ public class Contact {
     public Contact(String uid, String name, String phoneNumber) {
         this.name = name;
         this.uid = uid;
+        this.phoneNumber = phoneNumber;
+    }
+
+    public Contact(String uid, String name, String phoneNumber, String email) {
+        this.email = email;
+        this.uid = uid;
+        this.name = name;
         this.phoneNumber = phoneNumber;
     }
 
@@ -53,5 +64,7 @@ public class Contact {
         return uid;
     }
 
-
+    public String getEmail() {
+        return email;
+    }
 }

@@ -1,9 +1,17 @@
 package edu.puc.iic3380.mg4.fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,9 +34,9 @@ import java.util.ArrayList;
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.model.Contact;
 
-public class UserContactFragment extends Fragment {
+public class UserContactFragment extends FragmentBase {
     public static final String TAG = "UserContactFragment";
-
+    public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
@@ -36,6 +44,10 @@ public class UserContactFragment extends Fragment {
     private int mColumnCount = 1;
 
     private OnUserContactSelected mListener;
+    private ContactsFragment  contactsFragment;
+    private UserContactListner userContactListner;
+
+
 
     // private ArrayList<Contact> mContacts;
     private ArrayList<Contact> contactList;
@@ -51,6 +63,9 @@ public class UserContactFragment extends Fragment {
         void onUserContactSelected(Contact contact);
     }
 
+
+
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -58,8 +73,6 @@ public class UserContactFragment extends Fragment {
     public UserContactFragment() {
     }
 
-    // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
     public static UserContactFragment newInstance(int columnCount) {
         UserContactFragment fragment = new UserContactFragment();
         Bundle args = new Bundle();
@@ -75,6 +88,8 @@ public class UserContactFragment extends Fragment {
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
+
+
     }
 
     @Override
@@ -93,13 +108,41 @@ public class UserContactFragment extends Fragment {
             }
         });
 
+        contactList = new ArrayList<Contact>();
+        mAdapter = new ContactsAdapter(getContext(), R.layout.usercontact_list_item, contactList);
+        mContactsListView.setAdapter(mAdapter);
+
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        userContactsRef = mFirebaseDatabase.getReference(FirebaseAuth.getInstance().getCurrentUser().getUid()).child(FIREBASE_KEY_USER_CONTACTS);
-        userContactsRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+        String dbRef = FIREBASE_KEY_USERS + "/" +
+                FirebaseAuth.getInstance().getCurrentUser().getUid() + "/" +
+                FIREBASE_KEY_USER_CONTACTS;
 
+        Log.d(TAG, "dbRef: " + dbRef);
+
+        userContactsRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .child(FIREBASE_KEY_USER_CONTACTS);
+        userContactsRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+        Log.d(TAG, "dbRefKey: " + userContactsRef.getKey());
+
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_contacts);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Context context = getContext();
+
+
+                doAction(new ContactsFragment(), TAG, context);
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+            }
+        });
 
         return view;
+    }
+
+    private boolean hasPhonePermissions() {
+        return ContextCompat.checkSelfPermission(this.getContext(), android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -147,8 +190,9 @@ public class UserContactFragment extends Fragment {
             TextView nameView = (TextView) view.findViewById(R.id.contact_name);
             TextView phoneView = (TextView) view.findViewById(R.id.contact_phone_number);
 
-            nameView.setText(contact.name);
-            phoneView.setText(contact.phoneNumber);
+
+            nameView.setText(contact.getName());
+            phoneView.setText(contact.getPhoneNumber());
 
             return view;
         }
@@ -205,7 +249,8 @@ public class UserContactFragment extends Fragment {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             Contact contact = dataSnapshot.getValue(Contact.class);
-            addContact(contact);
+            Log.d(TAG, "Contacto add on firebase: " + contact.getPhoneNumber());
+           // addContact(contact);
         }
 
         @Override
@@ -234,16 +279,29 @@ public class UserContactFragment extends Fragment {
      *
      * @param contact to add.
      */
-    private void addContact(Contact contact) {
+    public void addContact(Contact contact) {
+        Log.d(TAG, "addcontact" + contact.getPhoneNumber());
         for (Contact value : contactList) {
             if (contact.getUid().equals(value.getUid())) return;
         }
 
+        userContactsRef.push().setValue(contact);
         contactList.add(contact);
         mAdapter.notifyDataSetChanged();
 
         scrollToBottom();
     }
 
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        userContactListner = (UserContactListner)getActivity();
+    }
+
+    public void assign(ContactsFragment contactsFragment) {
+        this.contactsFragment = contactsFragment;
+    }
 
 }
