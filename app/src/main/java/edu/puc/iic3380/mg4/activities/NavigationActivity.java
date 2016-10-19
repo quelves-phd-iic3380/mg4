@@ -31,14 +31,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
+import edu.puc.iic3380.mg4.model.Chat;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
 public class NavigationActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected {
+        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected, ChatFragment.OnChatSelected {
 
     public static final String TAG = "NavigationActivity";
 
@@ -86,6 +88,13 @@ public class NavigationActivity extends AppCompatActivity
             public void onClick(View v) {
                 //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
                 doAction(new ContactsFragment());
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+                doAction(new ChatFragment());
             }
         });
 
@@ -234,6 +243,11 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     public void onUserContactSelected(Contact contact) {
+
+    }
+
+    @Override
+    public void onChatSelected(Chat chat) {
 
     }
 
