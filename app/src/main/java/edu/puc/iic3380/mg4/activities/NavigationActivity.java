@@ -67,12 +67,35 @@ public class NavigationActivity extends AppCompatActivity
             // If fragment is already added, replace it.
             if (getSupportFragmentManager().findFragmentByTag(TAG) != null) {
                 transaction = transaction.replace(R.id.content_navigation,
-                        fragment, null);
+                        fragment, TAG);
             } else {
                 transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
                         fragment, TAG);
             }
             transaction.commit();
+        }
+    }
+
+    protected void hide(Fragment fragment, String TAG) {
+        if (fragment != null) {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction transaction = fm.beginTransaction();
+            Log.d(TAG, "Hide Fragment");
+            transaction.hide(fragment);
+            transaction.commit();
+        } else {
+            Log.d(TAG, "Frament is null");
+        }
+    }
+    protected void show(Fragment fragment, String TAG) {
+        if (fragment != null) {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction transaction = fm.beginTransaction();
+            Log.d(TAG, "Hide Fragment");
+            transaction.show(fragment);
+            transaction.commit();
+        } else {
+            Log.d(TAG, "Frament is null");
         }
     }
 
@@ -242,10 +265,11 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     public void onContactSelected(Contact contact) {
-        FragmentManager fm = getSupportFragmentManager();
-        UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
+        //FragmentManager fm = getSupportFragmentManager();
+        //UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
         userContactFragment.addContact(contact);
-        doAction(new UserContactFragment(), UserContactFragment.TAG);
+        hide(contactsFragment, ContactsFragment.TAG);
+        doAction(userContactFragment, UserContactFragment.TAG);
     }
 
     @Override

@@ -25,15 +25,37 @@ public class FragmentBase extends Fragment {
                 // If fragment is already added, replace it.
                 if (fm.findFragmentByTag(TAG) != null) {
                     transaction = transaction.replace(R.id.content_navigation,
-                            fragment, null);
+                            fragment, TAG);
                 } else {
                     transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
                             fragment, TAG);
                 }
                 transaction.commit();
             }
+        } else {
+            Log.d(TAG, "Frament is null");
         }
-        else {
+    }
+
+    protected void hide(Fragment fragment, String TAG) {
+        if (fragment != null) {
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction transaction = fm.beginTransaction();
+            Log.d(TAG, "Hide Fragment");
+            transaction.hide(fragment);
+            transaction.commit();
+        } else {
+            Log.d(TAG, "Frament is null");
+        }
+    }
+    protected void show(Fragment fragment, String TAG) {
+        if (fragment != null) {
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction transaction = fm.beginTransaction();
+            Log.d(TAG, "Hide Fragment");
+            transaction.show(fragment);
+            transaction.commit();
+        } else {
             Log.d(TAG, "Frament is null");
         }
     }

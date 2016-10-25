@@ -133,7 +133,7 @@ public class UserContactFragment extends FragmentBase {
                 Context context = getContext();
 
 
-                doAction(new ContactsFragment(), TAG, context);
+                doAction(contactsFragment, TAG, context);
                 //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
@@ -284,6 +284,7 @@ public class UserContactFragment extends FragmentBase {
         for (Contact value : contactList) {
             if (contact.getUid().equals(value.getUid())) return;
         }
+
 
         userContactsRef.push().setValue(contact);
         contactList.add(contact);
