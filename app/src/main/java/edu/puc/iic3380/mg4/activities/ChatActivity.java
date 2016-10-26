@@ -64,10 +64,9 @@ public class ChatActivity extends AppCompatActivity {
     private ActivityChatBinding mBinding;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mChatRoomReference;
-    private DatabaseReference mChatRoomReference2;
+
 
     private ChatSettings mChatSettings;
-    private ChatSettings mChatSettings2;
     private boolean mInitialized;
 
     private List<ChatMessage> mMessageList;
@@ -83,7 +82,6 @@ public class ChatActivity extends AppCompatActivity {
 
         // We retrieve the chat settings (username and chat room name)
         mChatSettings = getIntent().getParcelableExtra(KEY_SETTINGS);
-        mChatSettings2 = getIntent().getParcelableExtra(KEY_SETTINGS2);
 
         TextView tvUser = (TextView)findViewById(R.id.tvUser);
         tvUser.setText(mChatSettings.getUsername());
@@ -99,14 +97,12 @@ public class ChatActivity extends AppCompatActivity {
         mBinding.setMessage(new TextHolder());
         mBinding.setHandler(new ChatActivityHandler());
 
-
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings.getChatRoom());
         mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
 
-        mChatRoomReference2 = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings2.getChatRoom());
-        mChatRoomReference2.addListenerForSingleValueEvent(new OnInitialDataLoaded2());
+
     }
 
 
@@ -147,33 +143,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    public class OnInitialDataLoaded2 implements ValueEventListener {
-
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            for (DataSnapshot child : dataSnapshot.getChildren()) {
-                ChatMessage chatMessage = child.getValue(ChatMessage.class);
-                mMessageList.add(chatMessage);
-            }
-            // Update the UI
-            mAdapter.notifyDataSetChanged();
-
-            scrollToBottom();
-
-            mInitialized = true;
-            mChatRoomReference2.addChildEventListener(new OnMessagesChanged());
-            Log.i(TAG, "Chat initialized 2");
-        }
-
-
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            Log.i(TAG, "Could not initialize chat 2.");
-            // TODO: Inform the user about the error and handle gracefully.
-
-        }
-    }
 
     /**
      * Listener for updating in real time the chat room's messages, after the initial messages have been loaded.

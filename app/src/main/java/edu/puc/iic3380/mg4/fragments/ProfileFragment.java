@@ -246,7 +246,7 @@ public class ProfileFragment extends FragmentBase {
 
             mEmailView.setText(user.getEmail());
             mUsernameView.setText(user.getUsername());
-            mPhoneView.setText(user.getPhone());
+            mPhoneView.setText(user.getPhoneNumber());
 
             Log.d(TAG, "user loaded: " + user.toString());
 

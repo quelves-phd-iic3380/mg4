@@ -15,11 +15,11 @@ import java.util.Map;
 public class User {
     private String uid;
     private String username;
-    private String phone;
+    private String phoneNumber;
     private String email;
     private String state;
     private String message;
-    private String chatkey;
+
 
 
     private ArrayList<Chat> chats;
@@ -30,10 +30,10 @@ public class User {
 
     }
 
-    public User(String uid, String email, String username, String phone) {
+    public User(String uid, String email, String username, String phoneNumber) {
         this.uid = uid;
         this.username = username;
-        this.phone = phone;
+        this.phoneNumber = phoneNumber;
         this.email = email;
     }
 
@@ -43,7 +43,7 @@ public class User {
         result.put("uid", uid);
         result.put("username", username);
         result.put("email", email);
-        result.put("phone", phone);
+        result.put("phone", phoneNumber);
         result.put("estado", state);
         result.put("message", message);
         return result;
@@ -65,12 +65,12 @@ public class User {
         this.uid = uid;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getPhoneNumber() {
+        return phoneNumber != null ? phoneNumber.replace(" ", ""):phoneNumber;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setPhone(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getUsername() {
@@ -79,14 +79,6 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getChatkey() {
-        return chatkey;
-    }
-
-    public void setChatkey(String chatkey) {
-        this.chatkey = chatkey;
     }
 
     public String getMessage() {
@@ -108,10 +100,9 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "chatkey='" + chatkey + '\'' +
                 ", uid='" + uid + '\'' +
                 ", username='" + username + '\'' +
-                ", phone='" + phone + '\'' +
+                ", phone='" + phoneNumber + '\'' +
                 ", email='" + email + '\'' +
                 ", state='" + state + '\'' +
                 ", message='" + message + '\'' +

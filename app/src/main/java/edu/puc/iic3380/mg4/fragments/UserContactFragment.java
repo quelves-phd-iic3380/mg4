@@ -285,7 +285,7 @@ public class UserContactFragment extends FragmentBase {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             Contact contact = dataSnapshot.getValue(Contact.class);
-            Log.d(TAG, "Contacto add on firebase: " + contact.getPhoneNumber());
+            Log.d(TAG, "Contacto: " + contact.toString());
            // addContact(contact);
         }
 
@@ -316,7 +316,7 @@ public class UserContactFragment extends FragmentBase {
      * @param contact to add.
      */
     public void addContact(Contact contact) {
-        Log.d(TAG, "addcontact" + contact.getPhoneNumber());
+        Log.d(TAG, "addcontact" + contact.toString());
         for (Contact value : contactList) {
             if (contact.getUid().equals(value.getUid())) return;
         }

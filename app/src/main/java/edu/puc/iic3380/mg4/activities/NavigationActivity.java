@@ -43,14 +43,17 @@ import edu.puc.iic3380.mg4.fragments.ProfileFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactListner;
 import edu.puc.iic3380.mg4.model.Chat;
+import edu.puc.iic3380.mg4.model.ChatBinding;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_ROOMS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT_KEY;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
+
 
 public class NavigationActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -212,29 +215,37 @@ public class NavigationActivity extends AppCompatActivity
 
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
-        Log.d(TAG, "Find user " + FirebaseAuth.getInstance().getCurrentUser().getUid());
-        usersRef.orderByChild("uid").equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    user = child.getValue(User.class);
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
 
-                    //create fragmenhts
-                    profileFragment = ProfileFragment.newInstance(user.getPhone());
-                    userContactFragment = UserContactFragment.newInstance(user.getPhone());
-                    userContactFragment.assign(contactsFragment);
+            Log.d(TAG, "Buscando detalle para user: " + FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-                    Log.d(TAG, "User detail loaded: " + user.toString());
+            usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
+            usersRef.orderByChild("uid").equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        user = child.getValue(User.class);
+
+                        //create fragmenhts
+                        profileFragment = ProfileFragment.newInstance(user.getPhoneNumber());
+                        userContactFragment = UserContactFragment.newInstance(user.getPhoneNumber());
+                        userContactFragment.assign(contactsFragment);
+
+                        Log.d(TAG, "User detail loaded: " + user.toString());
+                    }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
-        //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+                }
+            });
+
+            //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+        }
+        else {
+            Toast.makeText(NavigationActivity.this, "Usuario Indefinido!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static Intent getIntent(Context context) {
@@ -365,29 +376,38 @@ public class NavigationActivity extends AppCompatActivity
 
     private void startChat(Contact contact) {
         //Verificar y actualizar la key del chat
-        /*
-        if (contact.getChatkey() == null) {
-            contact.setChatkey(UUID.randomUUID().toString());
-            DatabaseReference userContactRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+        if (contact.getChatRef() == null) {
+            String chatKey = UUID.randomUUID().toString();
+            ChatBinding chatBinding = new ChatBinding(chatKey);
+            chatBinding.addUserId(user.getPhoneNumber());
+            chatBinding.addUserId(contact.getPhoneNumber());
+            contact.setChatRef(chatKey);
+
+            DatabaseReference chatBindingRef = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS);
+            chatBindingRef.child(chatKey).setValue(chatBinding);
+
+            //chat contacto send in
+            DatabaseReference userSendOutRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
+                    .child(contact.getPhoneNumber())
+                    .child(FIREBASE_KEY_USER_CONTACTS)
+                    .child(user.getPhoneNumber())
+                    .child(FIREBASE_KEY_USER_CONTACT_CHAT);
+            userSendOutRef.setValue(contact.getChatRef());
+
+            //Chan contacto send out
+            DatabaseReference userSendInRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
+                    .child(user.getPhoneNumber())
                     .child(FIREBASE_KEY_USER_CONTACTS)
                     .child(contact.getPhoneNumber())
-                    .child(FIREBASE_KEY_USER_CONTACT_CHAT_KEY);
-            userContactRef.setValue(contact.getChatkey());
+                    .child(FIREBASE_KEY_USER_CONTACT_CHAT);
+            userSendInRef.setValue(contact.getChatRef());
 
-            DatabaseReference userRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
-                    .child(contact.getUid())
-                    .child(FIREBASE_KEY_USER_CONTACTS)
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                    .child(FIREBASE_KEY_USER_CONTACT_CHAT_KEY);
-            userRef.setValue(contact.getChatkey());
-            Log.d(TAG, "dbRefKey: " + userContactRef.getKey());
         }
 
-*/
 
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ", "") + "-" + user.getPhone().replace(" ", ""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), user.getPhone().replace(" ", "") + "-" + contact.getPhoneNumber().replace(" ", ""));
+
+        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getChatRef());
+        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getChatRef());
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
     }
 

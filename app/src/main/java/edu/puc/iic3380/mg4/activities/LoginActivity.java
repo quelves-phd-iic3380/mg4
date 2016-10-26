@@ -133,7 +133,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
-        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+        //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
 
         // ...
         mAuth = FirebaseAuth.getInstance();
@@ -614,11 +614,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     public void storeUser(User user) {
 
-        if (usersRef.child(user.getPhone()).getRef() != null) {
-            usersRef.child(user.getPhone()).setValue(user);
+        if (usersRef.child(user.getPhoneNumber()).getRef() != null) {
+            usersRef.child(user.getPhoneNumber()).setValue(user);
             Log.d(TAG, "Created user : " + user.toString());
         } else {
-            usersRef.child(user.getPhone()).updateChildren(user.toMap());
+            usersRef.child(user.getPhoneNumber()).updateChildren(user.toMap());
             Log.d(TAG, "Updated user : " + user.toString());
         }
     }
