@@ -37,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
-        android:background="?attr/colorPrimary"
+        android:background="@color/bgBottomToolbar"
         android:minHeight="?attr/actionBarSize"
         app:popupTheme="@style/AppTheme.PopupOverlay">
 
@@ -51,17 +51,17 @@
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:src="@drawable/ic_person_black_24dp"
-                android:id="@+id/action_profile"
-                android:background="?attr/colorPrimary"/>
+                android:id="@+id/action_contacs"
+                android:background="@color/bgBottomToolbar"/>
 
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:id="@+id/action_contacs"
-                android:src="@drawable/ic_contacts_black_24dp"
-                android:background="?attr/colorPrimary"/>
+                android:id="@+id/action_groups"
+                android:src="@drawable/ic_group_black_24dp"
+                android:background="@color/bgBottomToolbar"/>
 
 
 
@@ -72,7 +72,7 @@
                 android:layout_weight="1"
                 android:id="@+id/action_chats"
                 android:src="@drawable/message_text"
-                android:background="?attr/colorPrimary"/>
+                android:background="@color/bgBottomToolbar"/>
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -80,7 +80,7 @@
                 android:layout_weight="1"
                 android:id="@+id/action_settings"
                 android:src="@drawable/ic_settings_applications_black_24dp"
-                android:background="?attr/colorPrimary"/>
+                android:background="@color/bgBottomToolbar"/>
 
 
         </LinearLayout>

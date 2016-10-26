@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,6 +34,7 @@ import com.google.firebase.database.ValueEventListener;
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
+import edu.puc.iic3380.mg4.fragments.ProfileFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactListner;
 import edu.puc.iic3380.mg4.model.Chat;
@@ -42,8 +44,11 @@ import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
 public class NavigationActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ContactsFragment.OnContactSelected, UserContactFragment.OnUserContactSelected, ChatFragment.OnChatSelected,
-        UserContactListner {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        ContactsFragment.OnContactSelected,
+        UserContactFragment.OnUserContactSelected,
+        ChatFragment.OnChatSelected,
+        ProfileFragment.OnFragmentInteractionListener {
 
     public static final String TAG = "NavigationActivity";
 
@@ -123,6 +128,14 @@ public class NavigationActivity extends AppCompatActivity
                 doAction(userContactFragment, UserContactFragment.TAG);
             }
         });
+        toolbarBottom.findViewById(R.id.action_settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
+                doAction(new ProfileFragment(), ProfileFragment.TAG);
+            }
+        });
+
         toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -272,12 +285,7 @@ public class NavigationActivity extends AppCompatActivity
         doAction(userContactFragment, UserContactFragment.TAG);
     }
 
-    @Override
-    public void addContact(Contact contact) {
-        FragmentManager fm = getSupportFragmentManager();
-        UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
-        fragment.addContact(contact);
-    }
+
 
     @Override
     public void onUserContactSelected(Contact contact) {
@@ -290,6 +298,11 @@ public class NavigationActivity extends AppCompatActivity
 
 
     public void onChatSelected(ChatMessage chat) {
+
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
 
     }
 

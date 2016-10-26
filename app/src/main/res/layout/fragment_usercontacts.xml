@@ -18,6 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/fab_size_normal"
+        android:background="#FFFFFF"
         android:layout_marginRight="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_menu_add"/>
 

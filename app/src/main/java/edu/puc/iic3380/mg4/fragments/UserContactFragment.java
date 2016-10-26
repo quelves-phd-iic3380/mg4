@@ -294,13 +294,6 @@ public class UserContactFragment extends FragmentBase {
     }
 
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        userContactListner = (UserContactListner)getActivity();
-    }
-
     public void assign(ContactsFragment contactsFragment) {
         this.contactsFragment = contactsFragment;
     }
