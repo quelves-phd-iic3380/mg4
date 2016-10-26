@@ -6,6 +6,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import edu.puc.iic3380.mg4.R;
 
 /**
@@ -13,6 +16,12 @@ import edu.puc.iic3380.mg4.R;
  */
 
 public class FragmentBase extends Fragment {
+    protected FirebaseDatabase mFirebaseDatabase;
+    protected DatabaseReference userContactsRef;
+    protected DatabaseReference usersRef;
+    //protected static final String FIREBASE_KEY_USERS = "users";
+    //protected static final String FIREBASE_KEY_USER_CONTACTS = "contacts";
+
     protected void doAction(Fragment fragment, String TAG, Context context) {
         if (fragment != null) {
 

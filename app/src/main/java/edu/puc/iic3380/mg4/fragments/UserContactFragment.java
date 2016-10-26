@@ -33,6 +33,10 @@ import java.util.ArrayList;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.model.Contact;
+import edu.puc.iic3380.mg4.model.User;
+
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 
 public class UserContactFragment extends FragmentBase {
     public static final String TAG = "UserContactFragment";
@@ -51,13 +55,12 @@ public class UserContactFragment extends FragmentBase {
 
     // private ArrayList<Contact> mContacts;
     private ArrayList<Contact> contactList;
+    private ArrayList<User> usersList;
+
     private ContactsAdapter mAdapter;
     private ListView mContactsListView;
 
-    private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference userContactsRef;
-    private static final String FIREBASE_KEY_USERS = "users";
-    private static final String FIREBASE_KEY_USER_CONTACTS = "contacts";
+
 
     public interface OnUserContactSelected {
         void onUserContactSelected(Contact contact);
@@ -109,6 +112,7 @@ public class UserContactFragment extends FragmentBase {
         });
 
         contactList = new ArrayList<Contact>();
+        usersList = new ArrayList<User>();
         mAdapter = new ContactsAdapter(getContext(), R.layout.usercontact_list_item, contactList);
         mContactsListView.setAdapter(mAdapter);
 
@@ -125,6 +129,12 @@ public class UserContactFragment extends FragmentBase {
                 .child(FIREBASE_KEY_USER_CONTACTS);
         userContactsRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
         Log.d(TAG, "dbRefKey: " + userContactsRef.getKey());
+
+        dbRef = FIREBASE_KEY_USERS;
+        Log.d(TAG, "dbRef: " + dbRef);
+        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
+        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoadedUser());
+        Log.d(TAG, "dbRefKey: " + usersRef.getKey());
 
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_contacts);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -232,6 +242,36 @@ public class UserContactFragment extends FragmentBase {
         }
     }
 
+    /**
+     * Listener for loading the initial messages of a chat room.
+     */
+    public class OnInitialDataLoadedUser implements ValueEventListener {
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                User user = child.getValue(User.class);
+
+                //Define
+                usersList.add(user);
+                Log.d(TAG, "User: " + user.toString());
+            }
+
+            Log.i(TAG, "Users Loaded!");
+
+        }
+
+
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.i(TAG, "Could not initialize chat.");
+            // TODO: Inform the user about the error and handle gracefully.
+
+        }
+    }
+
+
 
 
     /**
@@ -286,7 +326,8 @@ public class UserContactFragment extends FragmentBase {
         }
 
 
-        userContactsRef.push().setValue(contact);
+        userContactsRef.child(contact.getPhoneNumber()).setValue(contact);
+        //userContactsRef.push().setValue(contact);
         contactList.add(contact);
         mAdapter.notifyDataSetChanged();
 

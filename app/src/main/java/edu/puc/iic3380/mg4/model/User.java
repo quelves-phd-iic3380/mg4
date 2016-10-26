@@ -17,6 +17,10 @@ public class User {
     private String username;
     private String phone;
     private String email;
+    private String state;
+    private String message;
+    private String chatkey;
+
 
     private ArrayList<Chat> chats;
     private ArrayList<Contact> contacts;
@@ -40,6 +44,8 @@ public class User {
         result.put("username", username);
         result.put("email", email);
         result.put("phone", phone);
+        result.put("estado", state);
+        result.put("message", message);
         return result;
     }
 
@@ -75,13 +81,40 @@ public class User {
         this.username = username;
     }
 
+    public String getChatkey() {
+        return chatkey;
+    }
+
+    public void setChatkey(String chatkey) {
+        this.chatkey = chatkey;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
         return "User{" +
-                "email='" + email + '\'' +
+                "chatkey='" + chatkey + '\'' +
                 ", uid='" + uid + '\'' +
                 ", username='" + username + '\'' +
                 ", phone='" + phone + '\'' +
-                '}';
+                ", email='" + email + '\'' +
+                ", state='" + state + '\'' +
+                ", message='" + message + '\'' +
+                 '}';
     }
 }

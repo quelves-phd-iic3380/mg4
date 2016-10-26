@@ -24,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -44,14 +45,21 @@ import edu.puc.iic3380.mg4.databinding.ActivityChatBinding;
 import edu.puc.iic3380.mg4.fragments.StorageClientFragment;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
+import edu.puc.iic3380.mg4.util.Constantes;
+
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_ROOMS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 
 public class ChatActivity extends AppCompatActivity {
-    public static final String CHATTAG = "Chat";
+    public static final String TAG = "ChatActivity";
+
 
 
     private static final String KEY_SETTINGS = "settings";
     private static final String KEY_SETTINGS2 = "settings2";
-    private static final String FIREBASE_KEY_ROOMS = "chats";
+
+
 
     private ActivityChatBinding mBinding;
     private FirebaseDatabase mFirebaseDatabase;
@@ -91,6 +99,7 @@ public class ChatActivity extends AppCompatActivity {
         mBinding.setMessage(new TextHolder());
         mBinding.setHandler(new ChatActivityHandler());
 
+
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings.getChatRoom());
@@ -124,7 +133,7 @@ public class ChatActivity extends AppCompatActivity {
 
             mInitialized = true;
             mChatRoomReference.addChildEventListener(new OnMessagesChanged());
-            Log.i(CHATTAG, "Chat initialized");
+            Log.i(TAG, "Chat initialized");
 
         }
 
@@ -132,7 +141,7 @@ public class ChatActivity extends AppCompatActivity {
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-            Log.i(CHATTAG, "Could not initialize chat.");
+            Log.i(TAG, "Could not initialize chat.");
             // TODO: Inform the user about the error and handle gracefully.
 
         }
@@ -153,14 +162,14 @@ public class ChatActivity extends AppCompatActivity {
 
             mInitialized = true;
             mChatRoomReference2.addChildEventListener(new OnMessagesChanged());
-            Log.i(CHATTAG, "Chat initialized 2");
+            Log.i(TAG, "Chat initialized 2");
         }
 
 
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-            Log.i(CHATTAG, "Could not initialize chat 2.");
+            Log.i(TAG, "Could not initialize chat 2.");
             // TODO: Inform the user about the error and handle gracefully.
 
         }
@@ -279,7 +288,19 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     // Inner classes implementations
+    public class TextHolder extends BaseObservable {
+        private String mText;
 
+        @Bindable
+        public String getText() {
+            return mText;
+        }
+
+        public void setText(String text) {
+            mText = text;
+            notifyPropertyChanged(BR.text);
+        }
+    }
     public class ChatActivityHandler {
         public void onSendMessage(TextHolder textHolder) {
             if (mInitialized) {
@@ -329,30 +350,30 @@ public class ChatActivity extends AppCompatActivity {
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        Log.i(CHATTAG, "Camera Intent  1");
+        Log.i(TAG, "Camera Intent  1");
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
-            Log.i(CHATTAG, "Camera Intent  2");
+            Log.i(TAG, "Camera Intent  2");
             File photoFile = null;
             try {
-                Log.i(CHATTAG, "Camera Intent  3");
+                Log.i(TAG, "Camera Intent  3");
                 photoFile = createImageFile();
-                Log.i(CHATTAG, photoFile.getName());
+                Log.i(TAG, photoFile.getName());
             } catch (IOException ex) {
                 // Error occurred while creating the File
-                Log.i(CHATTAG, "Camera Intent  3");
+                Log.i(TAG, "Camera Intent  3");
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Log.i(CHATTAG, "Camera Intent  5");
+                Log.i(TAG, "Camera Intent  5");
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "com.example.android.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                Log.i(CHATTAG, "Camera Intent  6");
+                Log.i(TAG, "Camera Intent  6");
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                Log.i(CHATTAG, "Camera Intent  7");
+                Log.i(TAG, "Camera Intent  7");
             }
         }
     }
@@ -367,7 +388,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i(CHATTAG, "Camera onActivityResult  1");
+        Log.i(TAG, "Camera onActivityResult  1");
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
@@ -402,19 +423,7 @@ public class ChatActivity extends AppCompatActivity {
 
 
 
-    public class TextHolder extends BaseObservable {
-        private String mText;
 
-        @Bindable
-        public String getText() {
-            return mText;
-        }
-
-        public void setText(String text) {
-            mText = text;
-            notifyPropertyChanged(BR.text);
-        }
-    }
 
 
 }

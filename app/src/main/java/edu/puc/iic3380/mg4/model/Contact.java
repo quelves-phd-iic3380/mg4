@@ -6,11 +6,12 @@ import java.util.UUID;
  * Created by quelves on 9/20/16.
  */
 
-public class Contact {
+public class Contact extends  User {
     private String uid;
     private String name;
     private String phoneNumber;
     private String email;
+    private String chatkey;
 
     public Contact() {
     }
@@ -66,5 +67,29 @@ public class Contact {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getChatkey() {
+        return chatkey;
+    }
+
+    public void setChatkey(String chatkey) {
+        this.chatkey = chatkey;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 }

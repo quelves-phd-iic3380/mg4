@@ -23,6 +23,8 @@ import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.activities.LoginActivity;
 import edu.puc.iic3380.mg4.model.User;
 
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -41,6 +43,7 @@ public class ProfileFragment extends Fragment {
     private AutoCompleteTextView mPhoneView;
     private AutoCompleteTextView mUsernameView;
     private AutoCompleteTextView mStateView;
+    private AutoCompleteTextView mMessageView;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -50,7 +53,6 @@ public class ProfileFragment extends Fragment {
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference usersRef;
-    private static final String FIREBASE_KEY_USERS = "users";
     private User user;
 
     public ProfileFragment() {
@@ -96,6 +98,7 @@ public class ProfileFragment extends Fragment {
         mEmailView = (AutoCompleteTextView) view.findViewById(R.id.profile_email);
         mPhoneView = (AutoCompleteTextView) view.findViewById(R.id.profile_phone);
         mStateView = (AutoCompleteTextView) view.findViewById(R.id.profile_estado);
+        mMessageView = (AutoCompleteTextView) view.findViewById(R.id.profile_message);
 
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
@@ -143,12 +146,14 @@ public class ProfileFragment extends Fragment {
         mPhoneView.setError(null);
         mUsernameView.setError(null);
         mStateView.setError(null);
+        mMessageView.setError(null);
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
         String username = mUsernameView.getText().toString();
         String phone = mPhoneView.getText().toString();
         String state = mStateView.getText().toString();
+        String message = mMessageView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -197,6 +202,8 @@ public class ProfileFragment extends Fragment {
             user.setEmail(email);
             user.setPhone(phone);
             user.setUsername(username);
+            user.setState(state);
+            user.setMessage(message);
 
             Log.d(TAG, "Update User: " + user.toString());
 

@@ -31,6 +31,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.UUID;
+
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
@@ -42,6 +44,10 @@ import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
+
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT_KEY;
 
 public class NavigationActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -56,7 +62,7 @@ public class NavigationActivity extends AppCompatActivity
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference usersRef;
-    private static final String FIREBASE_KEY_USERS = "users";
+    protected DatabaseReference userContactRef;
     private User user;
     private ContactsFragment contactsFragment;
     private UserContactFragment userContactFragment;
@@ -289,6 +295,7 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     public void onUserContactSelected(Contact contact) {
+        startChat(contact);
 
     }
 
@@ -311,10 +318,31 @@ public class NavigationActivity extends AppCompatActivity
     }
 
     private void startChat(Contact contact) {
+        //Verificar y actualizar la key del chat
+        /*
+        if (contact.getChatkey() == null) {
+            contact.setChatkey(UUID.randomUUID().toString());
+            DatabaseReference userContactRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                    .child(FIREBASE_KEY_USER_CONTACTS)
+                    .child(contact.getPhoneNumber())
+                    .child(FIREBASE_KEY_USER_CONTACT_CHAT_KEY);
+            userContactRef.setValue(contact.getChatkey());
+
+            DatabaseReference userRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
+                    .child(contact.getUid())
+                    .child(FIREBASE_KEY_USER_CONTACTS)
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                    .child(FIREBASE_KEY_USER_CONTACT_CHAT_KEY);
+            userRef.setValue(contact.getChatkey());
+            Log.d(TAG, "dbRefKey: " + userContactRef.getKey());
+        }
+
+*/
         TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
+        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + user.getPhone().replace(" ",""));
+        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), user.getPhone().replace(" ","")+ "-" + contact.getPhoneNumber().replace(" ",""));
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
     }
 
