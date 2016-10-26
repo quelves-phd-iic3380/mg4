@@ -29,6 +29,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.UUID;
@@ -36,6 +37,8 @@ import java.util.UUID;
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
+import edu.puc.iic3380.mg4.fragments.FragmentBase;
+import edu.puc.iic3380.mg4.fragments.GroupsFragment;
 import edu.puc.iic3380.mg4.fragments.ProfileFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactListner;
@@ -66,24 +69,35 @@ public class NavigationActivity extends AppCompatActivity
     private User user;
     private ContactsFragment contactsFragment;
     private UserContactFragment userContactFragment;
+    private GroupsFragment groupsFragment;
+    private ProfileFragment profileFragment;
+    private Fragment activeFragment;
 
     public void doAction(Fragment fragment, String TAG) {
-        String fragmentTAG = "";
-        FragmentManager fm = getSupportFragmentManager();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            hide(activeFragment, TAG);
+            String fragmentTAG = "";
+            FragmentManager fm = getSupportFragmentManager();
 
 
-        FragmentTransaction transaction = fm.beginTransaction();
+            FragmentTransaction transaction = fm.beginTransaction();
 
-        if (fragment != null) {
-            // If fragment is already added, replace it.
-            if (getSupportFragmentManager().findFragmentByTag(TAG) != null) {
-                transaction = transaction.replace(R.id.content_navigation,
-                        fragment, TAG);
-            } else {
-                transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
-                        fragment, TAG);
+            if (fragment != null) {
+                // If fragment is already added, replace it.
+                if (getSupportFragmentManager().findFragmentByTag(TAG) != null) {
+                    transaction = transaction.replace(R.id.content_navigation,
+                            fragment, TAG);
+                } else {
+                    transaction = transaction.add(edu.puc.iic3380.mg4.R.id.content_navigation,
+                            fragment, TAG);
+                }
+                transaction.commit();
+                activeFragment = fragment;
+                show(activeFragment, TAG);
             }
-            transaction.commit();
+        } else {
+            Toast.makeText(NavigationActivity.this, "Usuario Indefinido!", Toast.LENGTH_SHORT).show();
+
         }
     }
 
@@ -98,11 +112,12 @@ public class NavigationActivity extends AppCompatActivity
             Log.d(TAG, "Frament is null");
         }
     }
+
     protected void show(Fragment fragment, String TAG) {
         if (fragment != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction transaction = fm.beginTransaction();
-            Log.d(TAG, "Hide Fragment");
+            Log.d(TAG, "Show Fragment");
             transaction.show(fragment);
             transaction.commit();
         } else {
@@ -122,8 +137,7 @@ public class NavigationActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         contactsFragment = new ContactsFragment();
-        userContactFragment = new UserContactFragment();
-        userContactFragment.assign(contactsFragment);
+        groupsFragment = new GroupsFragment();
 
 
         Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
@@ -131,22 +145,34 @@ public class NavigationActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+
                 doAction(userContactFragment, UserContactFragment.TAG);
+
             }
         });
-        toolbarBottom.findViewById(R.id.action_settings).setOnClickListener(new View.OnClickListener() {
+        toolbarBottom.findViewById(R.id.action_groups).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
-                doAction(new ProfileFragment(), ProfileFragment.TAG);
+                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+
+                doAction(groupsFragment, GroupsFragment.TAG);
+
             }
         });
+
 
         toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
                 doAction(new ChatFragment(), ChatFragment.TAG);
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(NavigationActivity.this, "Profile Pressed", Toast.LENGTH_SHORT).show();
+                doAction(profileFragment, ProfileFragment.TAG);
             }
         });
 
@@ -187,7 +213,28 @@ public class NavigationActivity extends AppCompatActivity
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
-        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+        Log.d(TAG, "Find user " + FirebaseAuth.getInstance().getCurrentUser().getUid());
+        usersRef.orderByChild("uid").equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    user = child.getValue(User.class);
+
+                    //create fragmenhts
+                    profileFragment = ProfileFragment.newInstance(user.getPhone());
+                    userContactFragment = UserContactFragment.newInstance(user.getPhone());
+                    userContactFragment.assign(contactsFragment);
+
+                    Log.d(TAG, "User detail loaded: " + user.toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
     }
 
     public static Intent getIntent(Context context) {
@@ -196,7 +243,7 @@ public class NavigationActivity extends AppCompatActivity
     }
 
 
-        @Override
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -292,7 +339,6 @@ public class NavigationActivity extends AppCompatActivity
     }
 
 
-
     @Override
     public void onUserContactSelected(Contact contact) {
         startChat(contact);
@@ -339,10 +385,9 @@ public class NavigationActivity extends AppCompatActivity
         }
 
 */
-        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + user.getPhone().replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), user.getPhone().replace(" ","")+ "-" + contact.getPhoneNumber().replace(" ",""));
+
+        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ", "") + "-" + user.getPhone().replace(" ", ""));
+        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), user.getPhone().replace(" ", "") + "-" + contact.getPhoneNumber().replace(" ", ""));
         startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
     }
 
@@ -357,6 +402,7 @@ public class NavigationActivity extends AppCompatActivity
             for (DataSnapshot child : dataSnapshot.getChildren()) {
                 user = child.getValue(User.class);
                 Log.d(TAG, "user loaded: " + user.toString());
+
             }
         }
     }

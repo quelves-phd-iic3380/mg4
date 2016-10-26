@@ -6,21 +6,33 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.model.User;
+
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 
 /**
  * Created by quelves on 22/10/2016.
  */
 
 public class FragmentBase extends Fragment {
+    public static final String TAG = "FragmentBase";
+
     protected FirebaseDatabase mFirebaseDatabase;
     protected DatabaseReference userContactsRef;
     protected DatabaseReference usersRef;
-    //protected static final String FIREBASE_KEY_USERS = "users";
-    //protected static final String FIREBASE_KEY_USER_CONTACTS = "contacts";
+    protected User user;
+
+    protected static final String ARG_PHONE = "PHONEKEY";
+    protected String phoneKey;
+
 
     protected void doAction(Fragment fragment, String TAG, Context context) {
         if (fragment != null) {
@@ -68,5 +80,7 @@ public class FragmentBase extends Fragment {
             Log.d(TAG, "Frament is null");
         }
     }
+
+
 
 }

@@ -66,9 +66,6 @@ public class UserContactFragment extends FragmentBase {
         void onUserContactSelected(Contact contact);
     }
 
-
-
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -76,10 +73,10 @@ public class UserContactFragment extends FragmentBase {
     public UserContactFragment() {
     }
 
-    public static UserContactFragment newInstance(int columnCount) {
+    public static UserContactFragment newInstance(String phoneKey) {
         UserContactFragment fragment = new UserContactFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
+        args.putString(ARG_PHONE, phoneKey);
         fragment.setArguments(args);
         return fragment;
     }
@@ -87,9 +84,8 @@ public class UserContactFragment extends FragmentBase {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+            phoneKey = getArguments().getString(ARG_PHONE);
         }
 
 
@@ -119,13 +115,13 @@ public class UserContactFragment extends FragmentBase {
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         String dbRef = FIREBASE_KEY_USERS + "/" +
-                FirebaseAuth.getInstance().getCurrentUser().getUid() + "/" +
+                phoneKey + "/" +
                 FIREBASE_KEY_USER_CONTACTS;
 
         Log.d(TAG, "dbRef: " + dbRef);
 
         userContactsRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS)
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .child(phoneKey)
                 .child(FIREBASE_KEY_USER_CONTACTS);
         userContactsRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
         Log.d(TAG, "dbRefKey: " + userContactsRef.getKey());

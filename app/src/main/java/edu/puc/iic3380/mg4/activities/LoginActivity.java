@@ -102,12 +102,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        mPhoneView = (AutoCompleteTextView) findViewById(R.id.phone);
-        mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.login_email);
+        mPhoneView = (AutoCompleteTextView) findViewById(R.id.login_phone);
+        mUsernameView = (AutoCompleteTextView) findViewById(R.id.login_name);
         populateAutoComplete();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
+        mPasswordView = (EditText) findViewById(R.id.login_password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -614,10 +614,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     public void storeUser(User user) {
 
-        if (usersRef.child(user.getUid()).getRef() != null) {
-            usersRef.child(user.getUid()).setValue(user);
+        if (usersRef.child(user.getPhone()).getRef() != null) {
+            usersRef.child(user.getPhone()).setValue(user);
+            Log.d(TAG, "Created user : " + user.toString());
         } else {
-            usersRef.child(user.getUid()).updateChildren(user.toMap());
+            usersRef.child(user.getPhone()).updateChildren(user.toMap());
+            Log.d(TAG, "Updated user : " + user.toString());
         }
     }
 

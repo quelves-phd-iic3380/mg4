@@ -33,11 +33,11 @@ import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
  * Use the {@link ProfileFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ProfileFragment extends Fragment {
+public class ProfileFragment extends FragmentBase {
     public static final String TAG = "ProfileFragment";
 
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+
+
 
     private AutoCompleteTextView mEmailView;
     private AutoCompleteTextView mPhoneView;
@@ -45,34 +45,22 @@ public class ProfileFragment extends Fragment {
     private AutoCompleteTextView mStateView;
     private AutoCompleteTextView mMessageView;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference usersRef;
     private User user;
 
+
     public ProfileFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ProfileFragment newInstance(String param1, String param2) {
+
+    public static ProfileFragment newInstance(String phoneKey) {
         ProfileFragment fragment = new ProfileFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_PHONE, phoneKey);
         fragment.setArguments(args);
         return fragment;
     }
@@ -81,8 +69,7 @@ public class ProfileFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            phoneKey = getArguments().getString(ARG_PHONE);
         }
 
 
@@ -102,10 +89,10 @@ public class ProfileFragment extends Fragment {
 
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS).child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS).child(phoneKey);
         usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
-
         Button btApply = (Button) view.findViewById(R.id.profile_apply_action);
+
         btApply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -265,4 +252,6 @@ public class ProfileFragment extends Fragment {
 
         }
     }
+
+
 }
