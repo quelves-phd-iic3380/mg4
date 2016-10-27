@@ -73,8 +73,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             "foo@example.com:hello", "bar@example.com:world"
     };
 
-    private boolean resignIn = false;
-    private boolean doSignUp = false;
+    private boolean doSignUp = true;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -445,9 +444,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
+
             // TODO: attempt authentication against a network service.
             if (FirebaseAuth.getInstance().getCurrentUser() == null) {
                 try {
+                    doSignUp = true;
+                    result = true;
                     // Simulate network access.
 
                     Log.d(TAG, "execute signInWithEmailAndPassword");
@@ -461,18 +463,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                             // the auth state listener will be notified and logic to handle the
                                             // signed in user can be handled in the listener.
                                             if (!task.isSuccessful()) {
+                                                result = false;
                                                 // Log.w(TAG, "signInWithEmail:failed", task.getException());
                                                 // Context context = getApplicationContext();
                                                 // Toast.makeText(context, R.string.auth_failed,
                                                 //         Toast.LENGTH_SHORT).show();
+                                                Log.d(TAG, "Do not Signin!");
+
                                             } else {
-                                                Log.d(TAG, "Signin without error!");
-                                                resignIn = false;
-                                                doSignUp = false;
                                                 result = true;
+                                                Log.d(TAG, "Do Signin without error!");
                                             }
 
-                                            // ...
+
                                         }
 
                                     }
@@ -481,53 +484,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     if (e instanceof FirebaseAuthException) {
+
                                         errorCode = ((FirebaseAuthException) e).getErrorCode();
                                         if (errorCode != null) {
-                                            switch (errorCode) {
-                                                case "ERROR_WRONG_PASSWORD":
-                                                    resignIn = true;
-                                                    doSignUp = false;
-                                                    result = false;
-                                                    break;
-                                                case "ERROR_INVALID_CREDENTIAL":
-                                                    resignIn = true;
-                                                    doSignUp = false;
-                                                    result = false;
-                                                    break;
-                                                case "ERROR_INVALID_EMAIL":
-                                                    resignIn = true;
-                                                    doSignUp = false;
-                                                    result = false;
-                                                    break;
-                                                case "ERROR_WEAK_PASSWORD":
-                                                    resignIn = true;
-                                                    doSignUp = false;
-                                                    result = false;
-                                                    break;
-                                                case "ERROR_USER_NOT_FOUND":
-                                                    resignIn = false;
-                                                    doSignUp = true;
-                                                    result = false;
-                                                    break;
-                                                default:
-                                                    resignIn = false;
-                                                    doSignUp = false;
-                                                    result = true;
+                                            Log.w(TAG, "onFailure:failed", e);
+                                            Context context = getApplicationContext();
+                                            Toast.makeText(context, R.string.auth_failed,
+                                                    Toast.LENGTH_SHORT).show();
 
-                                            }
-                                            //((FirebaseAuthException) e).printStackTrace();
-                                            if (!result) {
-                                                Log.w(TAG, "onFailure:failed", e);
-                                                Context context = getApplicationContext();
-                                                Toast.makeText(context, R.string.auth_failed,
-                                                        Toast.LENGTH_SHORT).show();
-                                            }
                                             Log.d(TAG, "onFailure::Error code: " + errorCode);
+
                                         } else {
                                             Log.d(TAG, "Signin without error!");
-                                            resignIn = false;
-                                            doSignUp = false;
-                                            result = true;
                                         }
                                     }
                                 }
@@ -554,12 +522,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                         // signed in user can be handled in the listener.
                                         Context context = getApplicationContext();
                                         if (!task.isSuccessful()) {
+                                            Log.d(TAG, "Do not SignUp!");
+                                            result = false;
                                             Toast.makeText(context, R.string.auth_failed,
                                                     Toast.LENGTH_SHORT).show();
 
                                         } else {
-                                            Log.d(TAG, "SignUp without error!");
-                                            resignIn = false;
+                                            Log.d(TAG, "Do SignUp without error!");
                                             doSignUp = false;
                                             result = true;
 
@@ -579,7 +548,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             } else {
                 Log.d(TAG, "User : " + FirebaseAuth.getInstance().getCurrentUser().getEmail() + "Already Authenticated!");
-                resignIn = false;
                 doSignUp = false;
                 result = true;
             }

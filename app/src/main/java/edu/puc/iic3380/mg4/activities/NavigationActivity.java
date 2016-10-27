@@ -316,7 +316,7 @@ public class NavigationActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
-        } else if (id == R.id.nav_signout) {
+        } else if (id == R.id.nav_login) {
             LoginActivity.sigout();
             startActivity(LoginActivity.getIntent(NavigationActivity.this));
 

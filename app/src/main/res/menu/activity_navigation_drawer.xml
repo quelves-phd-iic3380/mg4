@@ -19,9 +19,9 @@
             android:icon="@drawable/ic_menu_manage"
             android:title="Tools" />
         <item
-            android:id="@+id/nav_signout"
+            android:id="@+id/nav_login"
             android:icon="@drawable/ic_highlight_off_black_24dp"
-            android:title="Signout" />
+            android:title="Login" />
     </group>
 
     <item android:title="Communicate">
