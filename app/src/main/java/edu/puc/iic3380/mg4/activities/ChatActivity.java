@@ -6,17 +6,14 @@ import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +21,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -42,37 +38,26 @@ import java.util.List;
 import edu.puc.iic3380.mg4.BR;
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.databinding.ActivityChatBinding;
-import edu.puc.iic3380.mg4.fragments.StorageClientFragment;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
-import edu.puc.iic3380.mg4.util.Constantes;
 
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 
 public class ChatActivity extends AppCompatActivity {
     public static final String TAG = "ChatActivity";
 
-
-
     private static final String KEY_SETTINGS = "settings";
-    private static final String KEY_SETTINGS2 = "settings2";
-
-
 
     private ActivityChatBinding mBinding;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mChatRoomReference;
-
 
     private ChatSettings mChatSettings;
     private boolean mInitialized;
 
     private List<ChatMessage> mMessageList;
     private ArrayAdapter<ChatMessage> mAdapter;
-    private ChatMessagesAdapter mChatMessagesAdapter;
 
     private Intent cameraIntent;
 
@@ -105,8 +90,6 @@ public class ChatActivity extends AppCompatActivity {
 
 
     }
-
-
 
 
     /**
@@ -183,7 +166,6 @@ public class ChatActivity extends AppCompatActivity {
     public static Intent getIntent(Context context, ChatSettings settings, ChatSettings settings2) {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(KEY_SETTINGS, settings);
-        intent.putExtra(KEY_SETTINGS2, settings2);
         return intent;
     }
 
@@ -235,25 +217,23 @@ public class ChatActivity extends AppCompatActivity {
          */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            // Recycle views. Inflate the view only if its not already inflated.
-            if (view == null) {
-                view = mLayoutInflater.inflate(R.layout.chat_list_item, parent, false);
-            }
             ChatMessage message = mChatMessages.get(position);
+            View row = convertView;
 
+            LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-            TextView tvMessage = (TextView) view.findViewById(R.id.tvMessage);
-
-            if (message.getSenderId().equals(mChatSettings.getUsername())) {
-                tvMessage.setBackgroundColor(Color.GREEN);
-                tvMessage.setGravity(Gravity.RIGHT);
+            if (!message.getSenderId().equals(mChatSettings.getUsername())) {
+                row = inflater.inflate(R.layout.message_other_side, parent, false);
+            }else{
+                row = inflater.inflate(R.layout.message_mine_side, parent, false);
             }
 
-            tvMessage.setText( message.getMessage());
+            TextView chatText = (TextView) row.findViewById(R.id.msgr);
+            chatText.setText(message.getMessage());
+            return row;
 
 
-            return view;
+
         }
     }
 
