@@ -47,7 +47,8 @@ import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.util.Constantes;
 
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_ROOMS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 
@@ -99,7 +100,7 @@ public class ChatActivity extends AppCompatActivity {
 
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS).child(mChatSettings.getChatRoom());
+        mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_BINDINGS).child(mChatSettings.getChatRoom()).child(FIREBASE_KEY_MESSAGES);
         mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
 
 

@@ -49,7 +49,7 @@ import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
 
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_ROOMS;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
@@ -383,7 +383,7 @@ public class NavigationActivity extends AppCompatActivity
             chatBinding.addUserId(contact.getPhoneNumber());
             contact.setChatRef(chatKey);
 
-            DatabaseReference chatBindingRef = mFirebaseDatabase.getReference(FIREBASE_KEY_ROOMS);
+            DatabaseReference chatBindingRef = mFirebaseDatabase.getReference(FIREBASE_KEY_BINDINGS);
             chatBindingRef.child(chatKey).setValue(chatBinding);
 
             //chat contacto send in

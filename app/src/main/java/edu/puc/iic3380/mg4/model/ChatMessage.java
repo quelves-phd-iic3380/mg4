@@ -16,12 +16,13 @@ public class ChatMessage {
 
     // Java objects used in firebase realtime database must declare an empty constructor
     public ChatMessage() {
-        UUID.randomUUID().toString();
+        this.uid = UUID.randomUUID().toString();
 
 
     }
 
     public ChatMessage(String senderId, String message) {
+        this();
         this.senderId = senderId;
         this.message = message;
     }

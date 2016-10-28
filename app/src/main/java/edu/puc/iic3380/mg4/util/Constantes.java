@@ -7,6 +7,7 @@ package edu.puc.iic3380.mg4.util;
 public interface Constantes {
     public static final String FIREBASE_KEY_USERS = "users";
     public static final String FIREBASE_KEY_USER_CONTACTS = "contacts";
-    public static final String FIREBASE_KEY_ROOMS = "chats";
+    public static final String FIREBASE_KEY_BINDINGS = "bindings";
+    public static final String FIREBASE_KEY_MESSAGES = "messages";
     public static final String FIREBASE_KEY_USER_CONTACT_CHAT = "chatRef";
 }
