@@ -13,6 +13,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,7 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -32,7 +34,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import edu.puc.iic3380.mg4.BR;
@@ -163,7 +167,7 @@ public class ChatActivity extends AppCompatActivity {
 
     // Static helpers
 
-    public static Intent getIntent(Context context, ChatSettings settings, ChatSettings settings2) {
+    public static Intent getIntent(Context context, ChatSettings settings) {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(KEY_SETTINGS, settings);
         return intent;
@@ -219,6 +223,7 @@ public class ChatActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             ChatMessage message = mChatMessages.get(position);
             View row = convertView;
+            String space = "                                                                      ";
 
             LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -229,7 +234,27 @@ public class ChatActivity extends AppCompatActivity {
             }
 
             TextView chatText = (TextView) row.findViewById(R.id.msgr);
-            chatText.setText(message.getMessage());
+
+
+            String dateFormated = "";
+            try {
+                android.text.format.DateFormat df = new android.text.format.DateFormat();
+                if (message.getMessageDate().getDay() == GregorianCalendar.getInstance().getTime().getDay())
+                    dateFormated = df.format("hh:mm", message.getMessageDate()).toString();
+                else
+                    dateFormated = df.format("yyyy-MM-dd hh:mm:ss", message.getMessageDate()).toString();
+
+
+            }
+            catch (Exception ex) {
+                Log.e(TAG, "Error en parse de fecha " + message.getMessageDate());
+            }
+            
+            chatText.setText(Html.fromHtml("<small align='left'>" + message.getSenderId() + "</small>" +  "<br />" +
+                    "<b align='left'>" + message.getMessage() + "</b>" +  "<br />" +
+                    "<small align='right'>" + dateFormated + "</small>"));
+            //chatText.setText(message.getMessage());
+
             return row;
 
 
@@ -255,6 +280,7 @@ public class ChatActivity extends AppCompatActivity {
         public void onSendMessage(TextHolder textHolder) {
             if (mInitialized) {
                 ChatMessage newMessage = new ChatMessage(mChatSettings.getUsername(), textHolder.getText());
+                newMessage.setMessageDate(GregorianCalendar.getInstance().getTime());
 
                 mChatRoomReference.push().setValue(newMessage);
                 mAdapter.add(newMessage);

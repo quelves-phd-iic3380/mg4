@@ -406,9 +406,8 @@ public class NavigationActivity extends AppCompatActivity
 
 
 
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), contact.getChatRef());
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getChatRef());
-        startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings, chatSetting2));
+        ChatSettings chatSettings = new ChatSettings(user.getUsername(), contact.getChatRef());
+        startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings));
     }
 
     public class OnInitialDataLoaded implements ValueEventListener {

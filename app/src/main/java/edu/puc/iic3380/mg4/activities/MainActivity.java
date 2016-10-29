@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity  {
         String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
         ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
         ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
-        startActivity(ChatActivity.getIntent(MainActivity.this, chatSettings, chatSetting2));
+        startActivity(ChatActivity.getIntent(MainActivity.this, chatSettings));
     }
 
 
