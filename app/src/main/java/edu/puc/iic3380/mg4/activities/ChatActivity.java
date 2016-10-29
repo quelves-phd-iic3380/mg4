@@ -249,7 +249,7 @@ public class ChatActivity extends AppCompatActivity {
             catch (Exception ex) {
                 Log.e(TAG, "Error en parse de fecha " + message.getMessageDate());
             }
-            
+
             chatText.setText(Html.fromHtml("<small align='left'>" + message.getSenderId() + "</small>" +  "<br />" +
                     "<b align='left'>" + message.getMessage() + "</b>" +  "<br />" +
                     "<small align='right'>" + dateFormated + "</small>"));
