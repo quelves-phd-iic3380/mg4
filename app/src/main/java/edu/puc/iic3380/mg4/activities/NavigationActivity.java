@@ -53,6 +53,7 @@ import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
+import static edu.puc.iic3380.mg4.util.Constantes.USER_UID_DEFAULT;
 
 
 public class NavigationActivity extends AppCompatActivity
@@ -134,10 +135,12 @@ public class NavigationActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation);
 
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.tb_top);
         toolbar.setTitle("MemeticaMe");
         toolbar.setSubtitle("IIC3380 G4");
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         contactsFragment = new ContactsFragment();
         groupsFragment = new GroupsFragment();
@@ -214,13 +217,21 @@ public class NavigationActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         // Firebase initialization
+        String userUID;
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            userUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        } else {
+            userUID = USER_UID_DEFAULT;
+        }
 
-            Log.d(TAG, "Buscando detalle para user: " + FirebaseAuth.getInstance().getCurrentUser().getUid());
+        if (userUID != null) {
+
+
+            Log.d(TAG, "Buscando detalle para user: " + userUID);
 
             usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
-            usersRef.orderByChild("uid").equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            usersRef.orderByChild("uid").equalTo(userUID).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
@@ -242,8 +253,7 @@ public class NavigationActivity extends AppCompatActivity
             });
 
             //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
-        }
-        else {
+        } else {
             Toast.makeText(NavigationActivity.this, "Usuario Indefinido!", Toast.LENGTH_SHORT).show();
         }
     }
@@ -267,15 +277,12 @@ public class NavigationActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation, menu);
+        getMenuInflater().inflate(R.menu.app_bar_navigation_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -306,7 +313,7 @@ public class NavigationActivity extends AppCompatActivity
             fragment = new ContactsFragment();
             fragmentTAG = ContactsFragment.TAG;
         } else if (id == R.id.nav_chat) {
-
+            startActivity(ConversationActivity.getIntent(NavigationActivity.this));
 
         } else if (id == R.id.nav_setting) {
 
@@ -405,9 +412,8 @@ public class NavigationActivity extends AppCompatActivity
         }
 
 
-
         ChatSettings chatSettings = new ChatSettings(user.getUsername(), contact.getChatRef());
-        startActivity(ChatActivity.getIntent(NavigationActivity.this, chatSettings));
+        startActivity(ConversationActivity.getIntent(NavigationActivity.this, chatSettings));
     }
 
     public class OnInitialDataLoaded implements ValueEventListener {

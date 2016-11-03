@@ -40,7 +40,9 @@
             </-intent-filter
             -->
         </activity>
-        <activity android:name=".activities.ChatActivity" />
+        <activity
+            android:name=".activities.ChatActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".activities.SAFActivity" />
         <activity
             android:name=".activities.ControlCenterActivity"
@@ -58,7 +60,14 @@
         <activity
             android:name=".activities.NavigationActivity"
             android:label="@string/title_activity_navigation"
+
             android:theme="@style/AppTheme.NoActionBar">
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.NavigationActivity" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -74,7 +83,10 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".activities.ConversationActivity"
+            android:parentActivityName=".activities.NavigationActivity"></activity>
     </application>
 
 </manifest>

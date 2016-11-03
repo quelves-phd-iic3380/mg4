@@ -9,8 +9,10 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 
+import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
@@ -22,6 +24,8 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         setContentView(edu.puc.iic3380.mg4.R.layout.activity_main);
 
@@ -49,13 +53,6 @@ public class MainActivity extends AppCompatActivity  {
         return ContextCompat.checkSelfPermission(this.getBaseContext(), android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED;
     }
 
-    private void startChat(Contact contact) {
-        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
-        startActivity(ChatActivity.getIntent(MainActivity.this, chatSettings));
-    }
 
 
 }

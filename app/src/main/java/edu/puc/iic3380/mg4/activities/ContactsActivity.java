@@ -62,13 +62,5 @@ public class ContactsActivity extends AppCompatActivity {
         return ContextCompat.checkSelfPermission(this.getBaseContext(), android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED;
     }
 
-    private void startChat(Contact contact) {
-        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String mPhoneNumber = tMgr.getDeviceId()+" ".replace(" ","");
-        ChatSettings chatSettings = new ChatSettings(contact.getName(), mPhoneNumber + "-" + contact.getPhoneNumber().replace(" ",""));
-        ChatSettings chatSetting2 = new ChatSettings(contact.getName(), contact.getPhoneNumber().replace(" ","")+ "-" + mPhoneNumber);
-        startActivity(ChatActivity.getIntent(ContactsActivity.this, chatSettings));
-    }
-
 
 }

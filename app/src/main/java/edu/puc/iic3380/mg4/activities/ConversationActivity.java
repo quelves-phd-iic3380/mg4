@@ -7,27 +7,28 @@ import android.databinding.Bindable;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -35,26 +36,24 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
 import edu.puc.iic3380.mg4.BR;
 import edu.puc.iic3380.mg4.R;
-import edu.puc.iic3380.mg4.databinding.ActivityChatBinding;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
 
-public class ChatActivity extends AppCompatActivity {
-    public static final String TAG = "ChatActivity";
+public class ConversationActivity extends AppCompatActivity {
+    public static final String TAG = "ConversationActivity";
 
     private static final String KEY_SETTINGS = "settings";
 
-    private ActivityChatBinding mBinding;
+
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mChatRoomReference;
 
@@ -66,40 +65,64 @@ public class ChatActivity extends AppCompatActivity {
 
     private Intent cameraIntent;
 
+    private ListView lvChat;
+
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_chat);
+        setContentView(R.layout.activity_conversation);
 
         // We retrieve the chat settings (username and chat room name)
         mChatSettings = getIntent().getParcelableExtra(KEY_SETTINGS);
 
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(mChatSettings.getUsername());
+
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.tb_chat_top);
+        //toolbar.setTitle(mChatSettings.getUsername());
+        //toolbar.setSubtitle("active");
+        //setSupportActionBar(toolbar);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         TextView tvUser = (TextView)findViewById(R.id.tvUser);
-        tvUser.setText(mChatSettings.getUsername());
+        lvChat = (ListView)findViewById(R.id.lvChat);
 
         // List configuration
         mMessageList = new ArrayList<>();
         //mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mMessageList);
         //mBinding.listView.setAdapter(mAdapter);
         mAdapter = new ChatMessagesAdapter(getBaseContext(), android.R.layout.simple_list_item_1, mMessageList);
-        mBinding.lvChat.setAdapter(mAdapter);
-
-        // Data binding initialization
-        mBinding.setMessage(new TextHolder());
-        mBinding.setHandler(new ChatActivityHandler());
+        lvChat.setAdapter(mAdapter);
 
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_BINDINGS).child(mChatSettings.getChatRoom()).child(FIREBASE_KEY_MESSAGES);
         mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
 
-
     }
 
+
+    public static Intent getIntent(Context context) {
+        Intent intent = new Intent(context, ConversationActivity.class);
+        return intent;
+    }
+
+    // Static helpers
+
+    public static Intent getIntent(Context context, ChatSettings settings) {
+        Intent intent = new Intent(context, ConversationActivity.class);
+        intent.putExtra(KEY_SETTINGS, settings);
+        return intent;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.chat_bar_navigation_menu, menu);
+        return true;
+    }
 
     /**
      * Listener for loading the initial messages of a chat room.
@@ -169,17 +192,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-
-    // Static helpers
-
-    public static Intent _getIntent(Context context, ChatSettings settings) {
-        Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra(KEY_SETTINGS, settings);
-        return intent;
-    }
-
-
-
     /**
      * Adds a chat message to the current list of messages only if it hasn't been previously added.
      *
@@ -200,7 +212,7 @@ public class ChatActivity extends AppCompatActivity {
      * Scrolls the list view to the bottom.
      */
     private void scrollToBottom() {
-        mBinding.lvChat.smoothScrollToPosition(mAdapter.getCount() - 1);
+        lvChat.smoothScrollToPosition(mAdapter.getCount() - 1);
     }
 
 
@@ -300,11 +312,11 @@ public class ChatActivity extends AppCompatActivity {
 
         public void onBackToContacts() {
 
-            startActivity(MainActivity.getIntent(ChatActivity.this));
+            startActivity(MainActivity.getIntent(ConversationActivity.this));
         }
 
         public void onShowStorageAccess(){
-            startActivity(SAFActivity.getIntent(ChatActivity.this));
+            startActivity(SAFActivity.getIntent(ConversationActivity.this));
         }
 
         public void onOpenCamera() {
@@ -312,7 +324,7 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         public void onOpenMic() {
-            startActivity(AudioRecordActivity.getIntent(ChatActivity.this));
+            startActivity(AudioRecordActivity.getIntent(ConversationActivity.this));
         }
     }
 
@@ -373,7 +385,7 @@ public class ChatActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            ImageView  mImageView = (ImageView)findViewById(R.id.ivUser);
+            ImageView mImageView = (ImageView)findViewById(R.id.ivUser);
             mImageView.setImageBitmap(imageBitmap);
         }
         if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
@@ -408,4 +420,3 @@ public class ChatActivity extends AppCompatActivity {
 
 
 }
-

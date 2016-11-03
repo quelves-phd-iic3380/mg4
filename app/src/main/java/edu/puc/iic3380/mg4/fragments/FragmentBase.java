@@ -17,6 +17,7 @@ import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.model.User;
 
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
+import static edu.puc.iic3380.mg4.util.Constantes.USER_PHONE_NUMBER;
 
 /**
  * Created by quelves on 22/10/2016.
@@ -79,6 +80,17 @@ public class FragmentBase extends Fragment {
         } else {
             Log.d(TAG, "Frament is null");
         }
+    }
+
+    protected String getPhoneKey() {
+        if (phoneKey == null) {
+
+            phoneKey = USER_PHONE_NUMBER;
+
+        }
+
+        return phoneKey;
+
     }
 
 

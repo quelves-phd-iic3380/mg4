@@ -5,7 +5,7 @@ android {
     buildToolsVersion "24.0.2"
     defaultConfig {
         applicationId "edu.puc.iic3380.mg4"
-        minSdkVersion 19
+        minSdkVersion 16
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -24,6 +24,7 @@ android {
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_7
         sourceCompatibility JavaVersion.VERSION_1_7
+
     }
 }
 
@@ -32,6 +33,7 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    compile 'com.google.android.gms:play-services:9.8.0'
     compile 'com.google.firebase:firebase-core:9.8.0'
     compile 'com.google.firebase:firebase-database:9.8.0'
     compile 'com.google.firebase:firebase-auth:9.8.0'
@@ -41,19 +43,10 @@ dependencies {
     compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:recyclerview-v7:24.2.1'
     compile 'com.getbase:floatingactionbutton:1.10.1'
-    compile 'com.github.clans:fab:1.6.2'
     compile 'com.android.support:support-vector-drawable:24.2.1'
     testCompile 'junit:junit:4.12'
+
+    compile 'com.makeramen:roundedimageview:2.2.1'
 }
-
-
-
-
-
-
-
-
-
-
 
 apply plugin: 'com.google.gms.google-services'

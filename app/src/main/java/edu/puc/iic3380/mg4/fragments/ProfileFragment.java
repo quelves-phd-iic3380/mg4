@@ -87,6 +87,8 @@ public class ProfileFragment extends FragmentBase {
         mStateView = (AutoCompleteTextView) view.findViewById(R.id.profile_estado);
         mMessageView = (AutoCompleteTextView) view.findViewById(R.id.profile_message);
 
+        phoneKey = getPhoneKey();
+
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS).child(phoneKey);

@@ -112,6 +112,8 @@ public class UserContactFragment extends FragmentBase {
         mAdapter = new ContactsAdapter(getContext(), R.layout.usercontact_list_item, contactList);
         mContactsListView.setAdapter(mAdapter);
 
+        phoneKey = getPhoneKey();
+
         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         String dbRef = FIREBASE_KEY_USERS + "/" +
