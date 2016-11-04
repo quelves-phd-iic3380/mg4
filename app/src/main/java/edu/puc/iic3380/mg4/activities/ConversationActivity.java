@@ -21,6 +21,8 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -66,6 +68,7 @@ public class ConversationActivity extends AppCompatActivity {
     private Intent cameraIntent;
 
     private ListView lvChat;
+    private EditText etMessage;
 
 
     @Override
@@ -88,6 +91,28 @@ public class ConversationActivity extends AppCompatActivity {
 
         TextView tvUser = (TextView)findViewById(R.id.tvUser);
         lvChat = (ListView)findViewById(R.id.lvChat);
+
+        etMessage = (EditText)findViewById(R.id.etMessage);
+
+        ImageButton ibSendMessage = (ImageButton)findViewById(R.id.ibSendMessage);
+        ibSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mInitialized) {
+                    ChatMessage newMessage = new ChatMessage(mChatSettings.getUsername(), etMessage.getText().toString());
+                    newMessage.setMessageDate(GregorianCalendar.getInstance().getTime());
+
+                    mChatRoomReference.push().setValue(newMessage);
+                    mAdapter.add(newMessage);
+                    mAdapter.notifyDataSetChanged();
+
+                    scrollToBottom();
+
+                    // Empty the message text box.
+                    etMessage.setText("");
+                }
+            }
+        });
 
         // List configuration
         mMessageList = new ArrayList<>();

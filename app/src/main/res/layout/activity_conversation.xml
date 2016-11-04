@@ -43,13 +43,13 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/editText3"
+                android:id="@+id/etMessage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
             <ImageButton
-                android:id="@+id/button2"
+                android:id="@+id/ibSendMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_send_black_24dp" />
