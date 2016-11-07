@@ -95,7 +95,9 @@
         <activity
             android:name=".activities.ConversationActivity"
             android:parentActivityName=".activities.NavigationActivity" />
-        <activity android:name=".activities.ProfileActivity"></activity>
+        <activity android:name=".activities.ProfileActivity"
+            android:parentActivityName=".activities.NavigationActivity">
+        </activity>
     </application>
 
 </manifest>

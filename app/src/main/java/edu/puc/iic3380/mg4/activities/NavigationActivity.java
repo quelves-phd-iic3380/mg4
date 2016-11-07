@@ -3,26 +3,22 @@ package edu.puc.iic3380.mg4.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.databinding.DataBindingUtil;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,35 +26,27 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.File;
 import java.util.UUID;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.fragments.ChatFragment;
 import edu.puc.iic3380.mg4.fragments.ContactsFragment;
-import edu.puc.iic3380.mg4.fragments.FragmentBase;
 import edu.puc.iic3380.mg4.fragments.GroupsFragment;
 import edu.puc.iic3380.mg4.fragments.ProfileFragment;
 import edu.puc.iic3380.mg4.fragments.UserContactFragment;
-import edu.puc.iic3380.mg4.fragments.UserContactListner;
 import edu.puc.iic3380.mg4.model.Chat;
 import edu.puc.iic3380.mg4.model.ChatBinding;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
-import ly.img.android.ui.activities.CameraPreviewActivity;
 
-import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
-import static edu.puc.iic3380.mg4.util.Constantes.GENERIC_FILE_CODE;
-import static edu.puc.iic3380.mg4.util.Constantes.PICK_IMAGE_CODE;
 import static edu.puc.iic3380.mg4.util.Constantes.USER_UID_DEFAULT;
 
 
@@ -70,8 +58,6 @@ public class NavigationActivity extends AppCompatActivity
         ProfileFragment.OnFragmentInteractionListener {
 
     public static final String TAG = "NavigationActivity";
-
-    public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference usersRef;
@@ -141,7 +127,6 @@ public class NavigationActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation);
 
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.tb_top);
         toolbar.setTitle("MemeticaMe");
         toolbar.setSubtitle("IIC3380 G4");
@@ -150,69 +135,6 @@ public class NavigationActivity extends AppCompatActivity
 
         contactsFragment = new ContactsFragment();
         groupsFragment = new GroupsFragment();
-
-
-        Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
-        toolbarBottom.findViewById(R.id.action_contacs).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
-
-                doAction(userContactFragment, UserContactFragment.TAG);
-
-            }
-        });
-        toolbarBottom.findViewById(R.id.action_groups).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
-
-                doAction(groupsFragment, GroupsFragment.TAG);
-
-            }
-        });
-
-
-        toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
-                doAction(new ChatFragment(), ChatFragment.TAG);
-            }
-        });
-        toolbarBottom.findViewById(R.id.action_settings).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(NavigationActivity.this, "Profile Pressed", Toast.LENGTH_SHORT).show();
-                //doAction(profileFragment, ProfileFragment.TAG);
-                startActivity(ProfileActivity.getIntent(NavigationActivity.this, user));
-            }
-        });
-
-        /*
-        toolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.action_contacts:
-                        break;
-                    case R.id.action_favorite:
-                        break;
-                    case R.id.action_chats:
-                        break;
-                    case R.id.action_settings:
-                        break;
-
-                }
-
-
-                return true;
-            }
-        });
-
-        toolbarBottom.inflateMenu(R.menu.toolbar_buttom_menu);
-*/
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -233,10 +155,7 @@ public class NavigationActivity extends AppCompatActivity
         }
 
         if (userUID != null) {
-
-
             Log.d(TAG, "Buscando detalle para user: " + userUID);
-
             usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS);
             usersRef.orderByChild("uid").equalTo(userUID).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -258,11 +177,47 @@ public class NavigationActivity extends AppCompatActivity
 
                 }
             });
-
-            //usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
         } else {
             Toast.makeText(NavigationActivity.this, "Usuario Indefinido!", Toast.LENGTH_SHORT).show();
         }
+
+        Toolbar toolbarBottom = (Toolbar) findViewById(R.id.tb_bottom);
+        toolbarBottom.findViewById(R.id.action_contacs).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+
+                doAction(userContactFragment, UserContactFragment.TAG);
+
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_groups).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(NavigationActivity.this, "Contacts Pressed", Toast.LENGTH_SHORT).show();
+
+                doAction(groupsFragment, GroupsFragment.TAG);
+
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_chats).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(NavigationActivity.this, "Chats Pressed", Toast.LENGTH_SHORT).show();
+                doAction(new ChatFragment(), ChatFragment.TAG);
+            }
+        });
+        toolbarBottom.findViewById(R.id.action_settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (user != null) {
+                    startActivity(ProfileActivity.getIntent(NavigationActivity.this, user));
+                }
+                else {
+                    Toast.makeText(NavigationActivity.this, "User Undefined!, Wait", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public static Intent getIntent(Context context) {
@@ -303,7 +258,6 @@ public class NavigationActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             startActivity(LoginActivity.getIntent(NavigationActivity.this));
         }
@@ -334,6 +288,11 @@ public class NavigationActivity extends AppCompatActivity
             LoginActivity.sigout();
             startActivity(LoginActivity.getIntent(NavigationActivity.this));
 
+        } else if (id == R.id.nav_exit) {
+            finish();
+            System.runFinalization();
+            System.exit(0);
+            NavigationActivity.this.finish();
         }
 
 
@@ -356,8 +315,6 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     public void onContactSelected(Contact contact) {
-        //FragmentManager fm = getSupportFragmentManager();
-        //UserContactFragment fragment =(UserContactFragment) fm.findFragmentByTag(UserContactFragment.TAG);
         userContactFragment.addContact(contact);
         hide(contactsFragment, ContactsFragment.TAG);
         doAction(userContactFragment, UserContactFragment.TAG);
@@ -418,28 +375,8 @@ public class NavigationActivity extends AppCompatActivity
 
         }
 
-
         ChatSettings chatSettings = new ChatSettings(user.getUsername(), contact.getChatRef());
         startActivity(ConversationActivity.getIntent(NavigationActivity.this, chatSettings));
     }
-
-    public class OnInitialDataLoaded implements ValueEventListener {
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
-        }
-
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            for (DataSnapshot child : dataSnapshot.getChildren()) {
-                user = child.getValue(User.class);
-                Log.d(TAG, "user loaded: " + user.toString());
-
-            }
-        }
-    }
-
-
-
 
 }

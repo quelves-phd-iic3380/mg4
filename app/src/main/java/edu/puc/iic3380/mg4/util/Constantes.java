@@ -29,4 +29,6 @@ public interface Constantes {
 
     public static int CAMERA_PREVIEW_RESULT = 1;
 
+    public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
+
 }

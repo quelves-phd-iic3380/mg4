@@ -8,12 +8,7 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="send_photo">Send photo</string>
-    <string name="send_audio_meme">Send audio meme</string>
-    <string name="send_text_meme">Send text meme</string>
     <string name="send_file">Send file</string>
-    <string name="open_galery">Open Galery</string>
-    <string name="open_camara">Open Camara</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_create_meme">Create Meme</string>
@@ -85,20 +80,6 @@
         <item>360</item>
         <item>-1</item>
     </string-array>
-
-    <string-array name="list_preference_entries">
-        <item>Entry 1</item>
-        <item>Entry 2</item>
-        <item>Entry 3</item>
-    </string-array>
-
-    <string-array name="list_preference_entry_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
-    <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
 
