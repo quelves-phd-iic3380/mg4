@@ -18,6 +18,7 @@ public interface Constantes {
 
     public static final String FIREBASE_STORAGE_BUCKET_KEY_IMAGES = "images";
     public static final String FIREBASE_STORAGE_BUCKET_KEY_PROFILES = "profiles";
+    public static final String FIREBASE_STORAGE_BUCKET_KEY_PROFILE_IMAGE = "m4g_profile.jpg";
 
     public static final int GENERIC_FILE_CODE = 0;
     public static final int PICK_IMAGE_CODE = 1;

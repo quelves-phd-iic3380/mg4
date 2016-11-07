@@ -2,6 +2,7 @@ package edu.puc.iic3380.mg4.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
@@ -16,6 +17,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -23,7 +26,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import edu.puc.iic3380.mg4.R;
@@ -41,6 +46,7 @@ import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_PROFILES;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_PROFILE_IMAGE;
 import static edu.puc.iic3380.mg4.util.Constantes.GENERIC_FILE_CODE;
 import static edu.puc.iic3380.mg4.util.Constantes.PICK_IMAGE_CODE;
 
@@ -65,6 +71,8 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
     private StorageReference storageProfileRef;
     private StorageReference storageProfileImageRef;
     private User user;
+    private User _user;
+
 
     private static final String FOLDER = "ImgLy";
 
@@ -72,6 +80,8 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
     private SettingsList settingsList;
 
     private ImageView ivProfile;
+
+    private String profileImageFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +94,10 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("Profile Settings");
 
-        User _user = getIntent().getParcelableExtra(KEY_USER);
+        _user = getIntent().getParcelableExtra(KEY_USER);
         String phoneKey = _user.getPhoneNumber();
+
+        profileImageFilePath = MyDirectory.STORE.getPath() + "/mg4_profile_" + phoneKey + ".PNG";
 
         //Directory store = new Directory("STORE", 1, Environment.getExternalStorageDirectory().getAbsolutePath());
         settingsList = new SettingsList();
@@ -98,6 +110,7 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                 .getSettingsModel(MyEditorSaveSettings.class)
                 .setExportDir(MyDirectory.STORE, FOLDER)
                 .setExportPrefix("result_")
+                .setOutputFilePath(profileImageFilePath)
                 .setSavePolicy(
                         EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
                 );
@@ -130,9 +143,12 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         storageProfileImageRef= mFirebaseStorage
                 .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
                 .child(FIREBASE_STORAGE_BUCKET_KEY_PROFILES)
-                .child(phoneKey + ".jpg");
+                .child(phoneKey + ".PNG");
 
         ivProfile = (ImageView)findViewById(R.id.ivProfile);
+
+
+
         ivProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,6 +157,8 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                         .startActivityForResult(self, CAMERA_PREVIEW_RESULT);
             }
         });
+
+        setProfileImage();
     }
 
     public static Intent getIntent(Context context, User user) {
@@ -166,6 +184,19 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
             Log.d(TAG, "user loaded: " + user.toString());
 
         }
+    }
+
+    private void setProfileImage() {
+        File profileImageFile = getProfileImageFile();
+        if (profileImageFile != null) {
+            Uri contentUri = Uri.fromFile(profileImageFile);
+            ivProfile.setImageURI(contentUri);
+            ivProfile.refreshDrawableState();
+        }
+    }
+
+    private File getProfileImageFile() {
+        return new File(profileImageFilePath);
     }
 
     private void apply() {
@@ -302,12 +333,10 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                 Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 Uri contentUri = Uri.fromFile(file);
                 scanIntent.setData(contentUri);
-                sendBroadcast(scanIntent);
 
-                ivProfile.setImageURI(contentUri);
             }
-
             Toast.makeText(this, "Image Save on: " + resultPath, Toast.LENGTH_LONG).show();
+            setProfileImage();
         } else
         if (requestCode == GENERIC_FILE_CODE && resultCode == RESULT_OK) {
             Uri uri = data.getData();
@@ -323,5 +352,32 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
             String mimeType = getContentResolver().getType(uri);
 
         }
+
+    }
+
+    private void uploadProfileImage() {
+        // Get the data from an ImageView as bytes
+        ivProfile.setDrawingCacheEnabled(true);
+        ivProfile.buildDrawingCache();
+        Bitmap bitmap = ivProfile.getDrawingCache();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        UploadTask uploadTask = storageProfileImageRef.putBytes(data);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+
+                Toast.makeText(ProfileActivity.this, "uploadProfileImage Failure!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Toast.makeText(ProfileActivity.this, "uploadProfileImage download!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

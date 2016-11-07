@@ -169,6 +169,7 @@ public class NavigationActivity extends AppCompatActivity
                         userContactFragment.assign(contactsFragment);
 
                         Log.d(TAG, "User detail loaded: " + user.toString());
+                        Toast.makeText(NavigationActivity.this, "User Defined!", Toast.LENGTH_SHORT).show();
                     }
                 }
 

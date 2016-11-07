@@ -19,4 +19,7 @@ public enum MyDirectory {
     private MyDirectory(String dir) {
         this.dir = dir;
     }
+    public  String getPath() {
+        return dir;
+    }
 }
