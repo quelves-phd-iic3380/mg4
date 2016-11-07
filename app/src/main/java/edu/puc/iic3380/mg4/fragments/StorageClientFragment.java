@@ -73,7 +73,7 @@ public class StorageClientFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        Log.i(TAG, "Received an \"Activity Result\"");
+        Log.i(TAG, "Received an Activity Result");
         // BEGIN_INCLUDE (parse_open_document_response)
         // The ACTION_OPEN_DOCUMENT intent was sent with the request code READ_REQUEST_CODE.
         // If the request code seen here doesn't match, it's the response to some other intent,

@@ -22,6 +22,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,6 +33,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.File;
 import java.util.UUID;
 
 import edu.puc.iic3380.mg4.R;
@@ -48,11 +50,15 @@ import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
 import edu.puc.iic3380.mg4.model.Contact;
 import edu.puc.iic3380.mg4.model.User;
+import ly.img.android.ui.activities.CameraPreviewActivity;
 
+import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
+import static edu.puc.iic3380.mg4.util.Constantes.GENERIC_FILE_CODE;
+import static edu.puc.iic3380.mg4.util.Constantes.PICK_IMAGE_CODE;
 import static edu.puc.iic3380.mg4.util.Constantes.USER_UID_DEFAULT;
 
 
@@ -178,7 +184,8 @@ public class NavigationActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 Toast.makeText(NavigationActivity.this, "Profile Pressed", Toast.LENGTH_SHORT).show();
-                doAction(profileFragment, ProfileFragment.TAG);
+                //doAction(profileFragment, ProfileFragment.TAG);
+                startActivity(ProfileActivity.getIntent(NavigationActivity.this, user));
             }
         });
 
@@ -431,5 +438,8 @@ public class NavigationActivity extends AppCompatActivity
             }
         }
     }
+
+
+
 
 }

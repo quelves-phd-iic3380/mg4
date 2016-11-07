@@ -33,14 +33,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 import edu.puc.iic3380.mg4.BR;
 import edu.puc.iic3380.mg4.R;
@@ -49,6 +53,8 @@ import edu.puc.iic3380.mg4.model.ChatSettings;
 
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_IMAGES;
 
 public class ConversationActivity extends AppCompatActivity {
     public static final String TAG = "ConversationActivity";
@@ -58,6 +64,7 @@ public class ConversationActivity extends AppCompatActivity {
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mChatRoomReference;
+    private FirebaseStorage mFirebaseStorage;
 
     private ChatSettings mChatSettings;
     private boolean mInitialized;
@@ -114,6 +121,17 @@ public class ConversationActivity extends AppCompatActivity {
             }
         });
 
+
+        ImageButton ibSAF = (ImageButton)findViewById(R.id.ibSAF);
+        ibSAF.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(SAFActivity.getIntent(ConversationActivity.this));
+            }
+        });
+
+
+
         // List configuration
         mMessageList = new ArrayList<>();
         //mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mMessageList);
@@ -125,6 +143,13 @@ public class ConversationActivity extends AppCompatActivity {
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mChatRoomReference = mFirebaseDatabase.getReference(FIREBASE_KEY_BINDINGS).child(mChatSettings.getChatRoom()).child(FIREBASE_KEY_MESSAGES);
         mChatRoomReference.addListenerForSingleValueEvent(new OnInitialDataLoaded());
+
+        //Storage
+        mFirebaseStorage = FirebaseStorage.getInstance();
+        // Create a storage reference from our app
+        StorageReference storageImageRef = mFirebaseStorage
+                .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
+                .child(FIREBASE_STORAGE_BUCKET_KEY_IMAGES);
 
     }
 
@@ -352,6 +377,8 @@ public class ConversationActivity extends AppCompatActivity {
             startActivity(AudioRecordActivity.getIntent(ConversationActivity.this));
         }
     }
+
+
 
     /**
      * Camera

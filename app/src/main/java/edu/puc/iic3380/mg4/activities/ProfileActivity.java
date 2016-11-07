@@ -1,18 +1,21 @@
-package edu.puc.iic3380.mg4.fragments;
+package edu.puc.iic3380.mg4.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -21,33 +24,32 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.File;
+
 import edu.puc.iic3380.mg4.R;
-import edu.puc.iic3380.mg4.activities.LoginActivity;
 import edu.puc.iic3380.mg4.imagesdk.MyCameraSettings;
 import edu.puc.iic3380.mg4.imagesdk.MyDirectory;
 import edu.puc.iic3380.mg4.imagesdk.MyEditorSaveSettings;
 import edu.puc.iic3380.mg4.model.User;
 import ly.img.android.sdk.models.state.EditorSaveSettings;
 import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.ui.activities.CameraPreviewActivity;
+import ly.img.android.ui.activities.CameraPreviewBuilder;
+import ly.img.android.ui.utilities.PermissionRequest;
 
+import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
-import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_IMAGES;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_PROFILES;
+import static edu.puc.iic3380.mg4.util.Constantes.GENERIC_FILE_CODE;
+import static edu.puc.iic3380.mg4.util.Constantes.PICK_IMAGE_CODE;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ProfileFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ProfileFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class ProfileFragment extends FragmentBase {
-    public static final String TAG = "ProfileFragment";
+public class ProfileActivity extends AppCompatActivity  implements PermissionRequest.Response {
+    public static final String TAG = "ProfileActivity";
 
+    private ProfileActivity self;
 
-
+    private static final String KEY_USER = "KEY_USER";
 
     private AutoCompleteTextView mEmailView;
     private AutoCompleteTextView mPhoneView;
@@ -55,7 +57,6 @@ public class ProfileFragment extends FragmentBase {
     private AutoCompleteTextView mStateView;
     private AutoCompleteTextView mMessageView;
 
-    private OnFragmentInteractionListener mListener;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference usersRef;
@@ -65,32 +66,29 @@ public class ProfileFragment extends FragmentBase {
     private StorageReference storageProfileImageRef;
     private User user;
 
-
     private static final String FOLDER = "ImgLy";
-    public static int CAMERA_PREVIEW_RESULT = 1;
-
-    public ProfileFragment() {
-        // Required empty public constructor
-    }
 
 
-    public static ProfileFragment newInstance(String phoneKey) {
-        ProfileFragment fragment = new ProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PHONE, phoneKey);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private SettingsList settingsList;
+
+    private ImageView ivProfile;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            phoneKey = getArguments().getString(ARG_PHONE);
-        }
+        setContentView(R.layout.activity_profile);
+
+        self = this;
+
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("Profile Settings");
+
+        User _user = getIntent().getParcelableExtra(KEY_USER);
+        String phoneKey = _user.getPhoneNumber();
 
         //Directory store = new Directory("STORE", 1, Environment.getExternalStorageDirectory().getAbsolutePath());
-        SettingsList settingsList = new SettingsList();
+        settingsList = new SettingsList();
         settingsList
                 // Set custom camera export settings
                 .getSettingsModel(MyCameraSettings.class)
@@ -106,28 +104,17 @@ public class ProfileFragment extends FragmentBase {
 
         Log.d(TAG, "output: " + settingsList.toString());
 
+        mUsernameView = (AutoCompleteTextView) findViewById(R.id.profile_name);
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.profile_email);
+        mPhoneView = (AutoCompleteTextView) findViewById(R.id.profile_phone);
+        mStateView = (AutoCompleteTextView) findViewById(R.id.profile_estado);
+        mMessageView = (AutoCompleteTextView) findViewById(R.id.profile_message);
 
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_profile, container, false);
-
-        mUsernameView = (AutoCompleteTextView) view.findViewById(R.id.profile_name);
-        mEmailView = (AutoCompleteTextView) view.findViewById(R.id.profile_email);
-        mPhoneView = (AutoCompleteTextView) view.findViewById(R.id.profile_phone);
-        mStateView = (AutoCompleteTextView) view.findViewById(R.id.profile_estado);
-        mMessageView = (AutoCompleteTextView) view.findViewById(R.id.profile_message);
-
-        phoneKey = getPhoneKey();
-
-        // Firebase initialization
+         // Firebase initialization
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS).child(phoneKey);
         usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
-        Button btApply = (Button) view.findViewById(R.id.profile_apply_action);
+        Button btApply = (Button) findViewById(R.id.profile_apply_action);
 
         btApply.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -145,31 +132,40 @@ public class ProfileFragment extends FragmentBase {
                 .child(FIREBASE_STORAGE_BUCKET_KEY_PROFILES)
                 .child(phoneKey + ".jpg");
 
-        return view;
+        ivProfile = (ImageView)findViewById(R.id.ivProfile);
+        ivProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new CameraPreviewBuilder(self)
+                        .setSettingsList(settingsList)
+                        .startActivityForResult(self, CAMERA_PREVIEW_RESULT);
+            }
+        });
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+    public static Intent getIntent(Context context, User user) {
+        Intent intent = new Intent(context, ProfileActivity.class);
+        intent.putExtra(KEY_USER, user);
+        return intent;
+    }
+
+    public class OnInitialDataLoaded implements ValueEventListener {
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
         }
-    }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            user = dataSnapshot.getValue(User.class);
+
+            mEmailView.setText(user.getEmail());
+            mUsernameView.setText(user.getUsername());
+            mPhoneView.setText(user.getPhoneNumber());
+
+            Log.d(TAG, "user loaded: " + user.toString());
+
         }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     private void apply() {
@@ -264,39 +260,68 @@ public class ProfileFragment extends FragmentBase {
         return username.length() > 4;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    //Important for Android 6.0 and above permisstion request, don't forget this!
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        PermissionRequest.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    public class OnInitialDataLoaded implements ValueEventListener {
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
+    @Override
+    public void permissionGranted() {
+
+    }
+
+    @Override
+    public void permissionDenied() {
+        // The Permission was rejected by the user, so the Editor was not opened because it can not save the result image.
+        // TODO for you: Show a Hint to the User
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == CAMERA_PREVIEW_RESULT) {
+            String resultPath =
+                    data.getStringExtra(CameraPreviewActivity.RESULT_IMAGE_PATH);
+            String sourcePath =
+                    data.getStringExtra(CameraPreviewActivity.SOURCE_IMAGE_PATH);
+
+            if (resultPath != null) {
+                // Scan result file
+                File file =  new File(resultPath);
+                Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri contentUri = Uri.fromFile(file);
+                scanIntent.setData(contentUri);
+                sendBroadcast(scanIntent);
+            }
+
+            if (sourcePath != null) {
+                // Scan camera file
+                File file =  new File(sourcePath);
+                Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri contentUri = Uri.fromFile(file);
+                scanIntent.setData(contentUri);
+                sendBroadcast(scanIntent);
+
+                ivProfile.setImageURI(contentUri);
+            }
+
+            Toast.makeText(this, "Image Save on: " + resultPath, Toast.LENGTH_LONG).show();
+        } else
+        if (requestCode == GENERIC_FILE_CODE && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            String type = null;
+            String extension = MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri));
+            if (extension != null) {
+                type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+            }
 
         }
-
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            user = dataSnapshot.getValue(User.class);
-
-            mEmailView.setText(user.getEmail());
-            mUsernameView.setText(user.getUsername());
-            mPhoneView.setText(user.getPhoneNumber());
-
-            Log.d(TAG, "user loaded: " + user.toString());
+        else if (requestCode == PICK_IMAGE_CODE && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            String mimeType = getContentResolver().getType(uri);
 
         }
     }
-
-
 }
