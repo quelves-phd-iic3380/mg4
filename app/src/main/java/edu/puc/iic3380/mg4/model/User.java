@@ -24,6 +24,7 @@ public class User extends BaseObservable implements Parcelable {
     private String email;
     private String state;
     private String message;
+    private String md5HashImage;
 
     public User() {
 
@@ -43,6 +44,7 @@ public class User extends BaseObservable implements Parcelable {
         email = in.readString();
         state = in.readString();
         message = in.readString();
+        md5HashImage = in.readString();
     }
 
     public static final Creator<User> CREATOR = new Creator<User>() {
@@ -70,6 +72,7 @@ public class User extends BaseObservable implements Parcelable {
         dest.writeString(email);
         dest.writeString(state);
         dest.writeString(message);
+        dest.writeString(md5HashImage);
     }
 
     @Exclude
@@ -81,6 +84,7 @@ public class User extends BaseObservable implements Parcelable {
         result.put("phone", phoneNumber);
         result.put("estado", state);
         result.put("message", message);
+        result.put("md5HashImage", md5HashImage);
         return result;
     }
 
@@ -138,6 +142,14 @@ public class User extends BaseObservable implements Parcelable {
         this.state = state;
     }
 
+    public String getMd5HashImage() {
+        return md5HashImage;
+    }
+
+    public void setMd5HashImage(String md5HashImage) {
+        this.md5HashImage = md5HashImage;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -147,6 +159,7 @@ public class User extends BaseObservable implements Parcelable {
                 ", email='" + email + '\'' +
                 ", state='" + state + '\'' +
                 ", message='" + message + '\'' +
+                ", md5HashImage='" + md5HashImage + '\'' +
                  '}';
     }
 

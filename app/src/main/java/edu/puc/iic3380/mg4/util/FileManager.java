@@ -6,12 +6,24 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public final class FileManager {
+    public static final String TAG = "FileManager";
     private FileManager() {}
 
     public final static String BASE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/MemeticaMe";
@@ -153,6 +166,66 @@ public final class FileManager {
             e.printStackTrace();
         }
         return Uri.fromFile(new File(path));
+    }
+
+    /**
+     * Firebase storage functions
+     */
+    public static void storageuploadFile(File file, StorageMetadata metadata, StorageReference fileRef) {
+        try {
+            InputStream stream = new FileInputStream(file);
+
+            // Upload file and metadata to the path of file
+            UploadTask uploadTask = fileRef.putStream(stream, metadata);
+
+            // Listen for state changes, errors, and completion of the upload.
+            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    System.out.println("Upload is " + progress + "% done");
+                }
+            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                    System.out.println("Upload is paused");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // Handle successful uploads on complete
+                    Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
+                    Log.d(TAG, "donwloadURl: " + downloadUrl.getPath());
+                }
+            });
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Error in upload", e);
+        }
+    }
+
+    public static File storageDownloadFile(String filename, StorageMetadata metadata, StorageReference fileRef) {
+
+        File localFile = new File(filename);
+
+        fileRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                Log.d(TAG, "storageDownloadFile sucess! bytes: " + taskSnapshot.getTotalByteCount());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "Error", exception);
+            }
+        });
+
+        return localFile;
     }
 
 

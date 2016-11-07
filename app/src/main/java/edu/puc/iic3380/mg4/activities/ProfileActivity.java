@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -17,25 +18,36 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
 
 import edu.puc.iic3380.mg4.R;
 import edu.puc.iic3380.mg4.imagesdk.MyCameraSettings;
 import edu.puc.iic3380.mg4.imagesdk.MyDirectory;
 import edu.puc.iic3380.mg4.imagesdk.MyEditorSaveSettings;
 import edu.puc.iic3380.mg4.model.User;
+import edu.puc.iic3380.mg4.util.Constantes;
+import edu.puc.iic3380.mg4.util.FileManager;
 import ly.img.android.sdk.models.state.EditorSaveSettings;
 import ly.img.android.sdk.models.state.manager.SettingsList;
 import ly.img.android.ui.activities.CameraPreviewActivity;
@@ -158,7 +170,14 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
             }
         });
 
-        setProfileImage();
+
+
+        getStorageMetadata(storageProfileImageRef);
+        //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+
+
+
+
     }
 
     public static Intent getIntent(Context context, User user) {
@@ -186,18 +205,9 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         }
     }
 
-    private void setProfileImage() {
-        File profileImageFile = getProfileImageFile();
-        if (profileImageFile != null) {
-            Uri contentUri = Uri.fromFile(profileImageFile);
-            ivProfile.setImageURI(contentUri);
-            ivProfile.refreshDrawableState();
-        }
-    }
 
-    private File getProfileImageFile() {
-        return new File(profileImageFilePath);
-    }
+
+
 
     private void apply() {
         // Reset errors.
@@ -264,6 +274,17 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
             user.setState(state);
             user.setMessage(message);
 
+            /*
+            File file =  new File(resultPath);
+            Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(file);
+            scanIntent.setData(contentUri);
+            sendBroadcast(scanIntent);
+            ivProfile.setImageURI(contentUri);
+*/
+
+            //user.setMd5HashImage(storageProfileImageRef.getMetadata().getResult().getMd5Hash());
+
             Log.d(TAG, "Update User: " + user.toString());
 
             usersRef.updateChildren(user.toMap());
@@ -309,13 +330,16 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         // TODO for you: Show a Hint to the User
     }
 
+    private String sourcePath;
+    private String resultPath;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == CAMERA_PREVIEW_RESULT) {
-            String resultPath =
+            resultPath =
                     data.getStringExtra(CameraPreviewActivity.RESULT_IMAGE_PATH);
-            String sourcePath =
+            sourcePath =
                     data.getStringExtra(CameraPreviewActivity.SOURCE_IMAGE_PATH);
 
             if (resultPath != null) {
@@ -325,6 +349,9 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                 Uri contentUri = Uri.fromFile(file);
                 scanIntent.setData(contentUri);
                 sendBroadcast(scanIntent);
+                ivProfile.setImageURI(contentUri);
+                storageuploadFile(file, Constantes.StorageImageContentType, storageProfileImageRef);
+
             }
 
             if (sourcePath != null) {
@@ -336,7 +363,9 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
 
             }
             Toast.makeText(this, "Image Save on: " + resultPath, Toast.LENGTH_LONG).show();
-            setProfileImage();
+
+
+
         } else
         if (requestCode == GENERIC_FILE_CODE && resultCode == RESULT_OK) {
             Uri uri = data.getData();
@@ -355,29 +384,161 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
 
     }
 
-    private void uploadProfileImage() {
-        // Get the data from an ImageView as bytes
-        ivProfile.setDrawingCacheEnabled(true);
-        ivProfile.buildDrawingCache();
-        Bitmap bitmap = ivProfile.getDrawingCache();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] data = baos.toByteArray();
 
-        UploadTask uploadTask = storageProfileImageRef.putBytes(data);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
+    private void getStorageMetadata(StorageReference fileRef) {
+        fileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+            @Override
+            public void onSuccess(StorageMetadata storageMetadata) {
+                // Metadata now contains the metadata for 'images/forest.jpg'
+                //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+                Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-
-                Toast.makeText(ProfileActivity.this, "uploadProfileImage Failure!", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                Toast.makeText(ProfileActivity.this, "uploadProfileImage download!", Toast.LENGTH_SHORT).show();
+                // Uh-oh, an error occurred!
             }
         });
     }
+
+    private void storageuploadFile(File file, StorageMetadata metadata, StorageReference fileRef) {
+        try {
+            InputStream stream = new FileInputStream(file);
+
+            // Upload file and metadata to the path of file
+            UploadTask uploadTask = fileRef.putStream(stream, metadata);
+
+            // Listen for state changes, errors, and completion of the upload.
+            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    Log.d(TAG, "Upload is " + progress + "% done");
+                }
+            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                    Log.d(TAG, "Upload is paused");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.d(TAG, "Upload is Failure");
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // Handle successful uploads on complete
+                    Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
+                    Log.d(TAG, "donwloadURl: " + downloadUrl.getPath());
+
+                }
+            });
+            fileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                @Override
+                public void onSuccess(StorageMetadata storageMetadata) {
+                    // Metadata now contains the metadata for 'images/forest.jpg'
+                    user.setMd5HashImage(storageMetadata.getMd5Hash());
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Uh-oh, an error occurred!
+                }
+            });
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Error in upload", e);
+        }
+    }
+
+
+
+    private File localFile;
+
+
+    private void storageDownloadFile(String filename, StorageMetadata metadata, StorageReference fileRef) {
+
+        localFile = new File(filename);
+
+        fileRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                storeProfileImage(taskSnapshot, localFile);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "Error", exception);
+            }
+        });
+    }
+
+    private void storeProfileImage(FileDownloadTask.TaskSnapshot taskSnapshot, File localFile)  {
+        Log.d(TAG, "storageDownloadFile sucess! bytes: " + taskSnapshot.getTotalByteCount());
+        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(localFile);
+        scanIntent.setData(contentUri);
+        sendBroadcast(scanIntent);
+        ivProfile.setImageURI(contentUri);
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // If there's a download in progress, save the reference so you can query it later
+        if (storageProfileImageRef != null) {
+            outState.putString("reference", storageProfileImageRef.toString());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.d(TAG, "onRestoreInstanceState");
+
+        // If there was a download in progress, get its reference and create a new StorageReference
+        final String stringRef = savedInstanceState.getString("reference");
+        if (stringRef == null) {
+            return;
+        }
+        storageProfileImageRef = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
+
+        // Find all DownloadTasks under this StorageReference (in this example, there should be one)
+        List tasks = storageProfileImageRef.getActiveDownloadTasks();
+        if (tasks.size() > 0) {
+            // Get the task monitoring the download
+            FileDownloadTask task = (FileDownloadTask)tasks.get(0);
+
+            // Add new listeners to the task using an Activity scope
+            task.addOnSuccessListener(this, new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    Log.d(TAG, "Download sucess in onRestoreInstanceState");
+                    storeProfileImage(taskSnapshot, localFile);
+                }
+            });
+        }
+    }
+
+    private void _setProfileImage() {
+        try {
+            File profileImageFile = new File(profileImageFilePath);
+            if ((profileImageFile != null) && (profileImageFile.exists())) {
+                Uri contentUri = Uri.fromFile(profileImageFile);
+                ivProfile.setImageURI(contentUri);
+            }
+        }
+        catch (Exception e) {
+            Log.d(TAG, "SetProfileImage Error", e);
+        }
+    }
+
+
+
+
+
 }

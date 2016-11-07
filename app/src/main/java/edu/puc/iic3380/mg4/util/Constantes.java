@@ -1,5 +1,7 @@
 package edu.puc.iic3380.mg4.util;
 
+import com.google.firebase.storage.StorageMetadata;
+
 /**
  * Created by quelves on 26/10/2016.
  */
@@ -31,5 +33,14 @@ public interface Constantes {
     public static int CAMERA_PREVIEW_RESULT = 1;
 
     public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
+
+    /**
+     * Firebase Content types
+     */
+    public static final StorageMetadata StorageImageContentType =  new StorageMetadata.Builder()
+            .setContentType("image/jpeg")
+            .build();
+
+
 
 }
