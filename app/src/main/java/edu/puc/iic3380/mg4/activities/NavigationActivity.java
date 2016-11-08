@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,14 +20,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.formats.NativeAd;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.UUID;
 
@@ -47,6 +56,8 @@ import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USERS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACTS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_USER_CONTACT_CHAT;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_PROFILES;
 import static edu.puc.iic3380.mg4.util.Constantes.USER_UID_DEFAULT;
 
 
@@ -68,6 +79,8 @@ public class NavigationActivity extends AppCompatActivity
     private GroupsFragment groupsFragment;
     private ProfileFragment profileFragment;
     private Fragment activeFragment;
+
+    private ImageView ivProfileHeader;
 
     public void doAction(Fragment fragment, String TAG) {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
@@ -168,6 +181,31 @@ public class NavigationActivity extends AppCompatActivity
                         userContactFragment = UserContactFragment.newInstance(user.getPhoneNumber());
                         userContactFragment.assign(contactsFragment);
 
+                        ivProfileHeader = (ImageView)findViewById(R.id.ivProfileHeaderNavigation);
+
+                        // Create a storage reference from our app
+                        StorageReference storageProfileImageRef= FirebaseStorage.getInstance()
+                                .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
+                                .child(FIREBASE_STORAGE_BUCKET_KEY_PROFILES)
+                                .child(user.getPhoneNumber() + ".PNG");
+
+                        storageProfileImageRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                            @Override
+                            public void onSuccess(StorageMetadata storageMetadata) {
+                                // Metadata now contains the metadata for 'images/forest.jpg'
+                                //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+                                Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+                                Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(ivProfileHeader);
+                                ;
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Uh-oh, an error occurred!
+                            }
+                        });
+
                         Log.d(TAG, "User detail loaded: " + user.toString());
                         Toast.makeText(NavigationActivity.this, "User Defined!", Toast.LENGTH_SHORT).show();
                     }
@@ -219,6 +257,10 @@ public class NavigationActivity extends AppCompatActivity
                 }
             }
         });
+
+
+
+
     }
 
     public static Intent getIntent(Context context) {

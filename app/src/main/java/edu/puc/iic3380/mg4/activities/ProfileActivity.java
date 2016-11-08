@@ -172,14 +172,22 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         });
 
 
+        storageProfileImageRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+            @Override
+            public void onSuccess(StorageMetadata storageMetadata) {
+                // Metadata now contains the metadata for 'images/forest.jpg'
+                //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+                Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+                Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(ivProfile);
+                ;
 
-        getStorageMetadata(storageProfileImageRef);
-
-
-
-
-        //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
-
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
+            }
+        });
 
 
 
