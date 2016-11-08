@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -173,6 +174,10 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
 
 
         getStorageMetadata(storageProfileImageRef);
+
+
+
+
         //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
 
 
@@ -392,6 +397,8 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                 // Metadata now contains the metadata for 'images/forest.jpg'
                 //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
                 Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+                Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(ivProfile);
+                ;
 
             }
         }).addOnFailureListener(new OnFailureListener() {
