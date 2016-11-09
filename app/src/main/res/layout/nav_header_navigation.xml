@@ -12,12 +12,33 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <ImageView
-        android:id="@+id/ivProfileHeaderNavigation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingTop="12dp"
-        app:srcCompat="@android:drawable/sym_def_app_icon" />
+
+    <RelativeLayout
+
+        android:id="@+id/icon_layout"
+        android:layout_width="@dimen/icon_mask"
+        android:layout_height="@dimen/icon_mask"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+
+        <ImageView
+            android:id="@+id/ivProfileHeaderNavigation"
+            android:layout_width="@dimen/icon"
+            android:layout_height="@dimen/icon"
+            android:layout_centerInParent="true"
+            android:scaleType="fitXY"
+            app:srcCompat="@android:drawable/sym_def_app_icon">
+        </ImageView>
+
+        <ImageView
+            android:id="@+id/icon_mask"
+            android:layout_width="@dimen/icon_mask"
+            android:layout_height="@dimen/icon_mask"
+            android:layout_centerInParent="true"
+            android:background="@drawable/circle"
+            android:scaleType="fitXY" >
+        </ImageView>
+    </RelativeLayout>
 
     <TextView
         android:layout_width="match_parent"

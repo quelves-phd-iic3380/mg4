@@ -195,8 +195,12 @@ public class NavigationActivity extends AppCompatActivity
                                 // Metadata now contains the metadata for 'images/forest.jpg'
                                 //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
                                 Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
-                                Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(ivProfileHeader);
-                                ;
+                             try {
+                                 Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(ivProfileHeader);
+                             }
+                             catch (Exception e) {
+                                 Log.d(TAG, "Error en set Profile Image", e);
+                             }
 
                             }
                         }).addOnFailureListener(new OnFailureListener() {

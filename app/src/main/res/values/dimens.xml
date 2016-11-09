@@ -6,4 +6,10 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="nav_header_height">160dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+
+    <dimen name="icon">36dp</dimen>
+    <dimen name="icon_mask">55dp</dimen>
+
+    <dimen name="icon_profile">78dp</dimen>
+    <dimen name="icon_profile_mask">110dp</dimen>
 </resources>

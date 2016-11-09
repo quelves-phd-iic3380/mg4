@@ -12,14 +12,36 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <ImageView
-            android:id="@+id/ivProfile"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
+        android:layout_height="match_parent"
+        android:background="@color/background_white">
+
+        <RelativeLayout
+            android:id="@+id/icon_layout"
+            android:layout_width="@dimen/icon_profile_mask"
+            android:layout_height="@dimen/icon_profile_mask"
             android:layout_gravity="center"
-            android:src="@drawable/ic_android_black_24dp"/>
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true" >
+
+            <ImageView
+                android:id="@+id/ivProfile"
+                android:layout_width="@dimen/icon_profile"
+                android:layout_height="@dimen/icon_profile"
+                android:layout_centerInParent="true"
+                android:scaleType="fitXY"
+                android:background="@color/place_autocomplete_prediction_primary_text"
+                android:src="@drawable/ic_person_outline_black_24dp">
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/icon_mask"
+                android:layout_width="@dimen/icon_profile_mask"
+                android:layout_height="@dimen/icon_profile_mask"
+                android:layout_centerInParent="true"
+                android:background="@drawable/circle_profile"
+                android:scaleType="fitXY" >
+            </ImageView>
+        </RelativeLayout>
         <ScrollView
             android:id="@+id/login_form"
             android:layout_width="match_parent"
