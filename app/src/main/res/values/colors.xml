@@ -9,6 +9,8 @@
     <color name="colorAccent">#7C4DFF</color>
     <color name="bgBottomToolbar">#F5F5F5</color>
 
-
+    <color name="gray">#B3B3B3</color>
+    <color name="bg_color_mine">#8BC34A</color>
+    <color name="bg_color_other">#DDDBDB</color>
 </resources>
 

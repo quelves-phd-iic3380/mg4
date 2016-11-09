@@ -11,7 +11,6 @@ public class ChatMessage {
     public enum MessageType{
         TEXT, IMAGE, VIDEO, AUDIO, OTHER, NOT_SET
     }
-
     private static String[] ImageMimeTypes = { "image/jpeg", "image/jpg", "image/png" };
     private static String[] VideoMimeTypes = { "video/x-mpeg", "video/quicktime", "video/mp4" };
     private static String[] AudioMimeTypes = { "audio/mpeg3", "audio/x-mpeg-3", "audio/mpeg",
@@ -24,6 +23,8 @@ public class ChatMessage {
     private String receiverId;
     private String message;
     private Date messageDate;
+    private String url;
+    private MessageType mimeType;
 
     // Java objects used in firebase realtime database must declare an empty constructor
     public ChatMessage() {
@@ -36,6 +37,7 @@ public class ChatMessage {
         this();
         this.senderId = senderId;
         this.message = message;
+        this.mimeType = MessageType.TEXT;
     }
 
     public ChatMessage(String message, Date messageDate, String receiverId, String senderId) {
@@ -44,6 +46,13 @@ public class ChatMessage {
         this.messageDate = messageDate;
         this.receiverId = receiverId;
         this.senderId = senderId;
+    }
+
+    public ChatMessage(String senderId, String URL, MessageType mimeType) {
+        this();
+        this.senderId = senderId;
+        this.url = url;
+        this.mimeType = mimeType;
     }
 
     public String getMessage() {
@@ -91,5 +100,19 @@ public class ChatMessage {
         return message;
     }
 
+    public MessageType getMimeType() {
+        return mimeType;
+    }
 
+    public void setMimeType(MessageType mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 }

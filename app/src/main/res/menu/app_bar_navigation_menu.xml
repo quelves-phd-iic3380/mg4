@@ -8,7 +8,8 @@
         android:id="@+id/action_favorite"
         android:icon="@drawable/ic_group_black_24dp"
         android:title="@string/action_settings"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="ifRoom"
+        android:tint="@color/background_white"/>
     <item
         android:id="@+id/action_favorite2"
         android:icon="@drawable/ic_add_box_black_24dp"

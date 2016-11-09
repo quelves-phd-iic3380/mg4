@@ -27,7 +27,6 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -35,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -233,9 +231,9 @@ public class ChatActivity extends AppCompatActivity {
             LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             if (!message.getSenderId().equals(mChatSettings.getUsername())) {
-                row = inflater.inflate(R.layout.message_other_side, parent, false);
+                row = inflater.inflate(R.layout.message_other_text, parent, false);
             }else{
-                row = inflater.inflate(R.layout.message_mine_side, parent, false);
+                row = inflater.inflate(R.layout.message_mine_text, parent, false);
             }
 
             TextView chatText = (TextView) row.findViewById(R.id.msgr);

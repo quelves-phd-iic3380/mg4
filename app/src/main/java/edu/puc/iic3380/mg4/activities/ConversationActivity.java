@@ -2,22 +2,22 @@ package edu.puc.iic3380.mg4.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
-import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -26,37 +26,62 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
 
 import edu.puc.iic3380.mg4.BR;
 import edu.puc.iic3380.mg4.R;
+import edu.puc.iic3380.mg4.imagesdk.MyCameraSettings;
+import edu.puc.iic3380.mg4.imagesdk.MyDirectory;
+import edu.puc.iic3380.mg4.imagesdk.MyEditorSaveSettings;
 import edu.puc.iic3380.mg4.model.ChatMessage;
 import edu.puc.iic3380.mg4.model.ChatSettings;
+import edu.puc.iic3380.mg4.util.Constantes;
+import edu.puc.iic3380.mg4.util.OnMyStorageProcessListener;
+import ly.img.android.sdk.models.constant.Directory;
+import ly.img.android.sdk.models.state.EditorLoadSettings;
+import ly.img.android.sdk.models.state.EditorSaveSettings;
+import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.ui.activities.CameraPreviewActivity;
+import ly.img.android.ui.activities.CameraPreviewBuilder;
+import ly.img.android.ui.activities.PhotoEditorBuilder;
+import ly.img.android.ui.utilities.PermissionRequest;
 
+import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_IMAGES;
+import static edu.puc.iic3380.mg4.util.Constantes.MG4_FOLDER;
 
-public class ConversationActivity extends AppCompatActivity {
+public class ConversationActivity extends AppCompatActivity implements PermissionRequest.Response, OnSuccessListener {
     public static final String TAG = "ConversationActivity";
 
     private static final String KEY_SETTINGS = "settings";
@@ -77,6 +102,13 @@ public class ConversationActivity extends AppCompatActivity {
     private ListView lvChat;
     private EditText etMessage;
 
+    private SettingsList settingsListCamera;
+    private SettingsList settingsListPhotoEdithor;
+
+    private StorageReference storageFilesRef;
+    private StorageReference storageFileRef;
+    private MyStorageListener myStorageListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +117,8 @@ public class ConversationActivity extends AppCompatActivity {
 
         // We retrieve the chat settings (username and chat room name)
         mChatSettings = getIntent().getParcelableExtra(KEY_SETTINGS);
+
+        myStorageListener = new MyStorageListener();
 
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -147,12 +181,37 @@ public class ConversationActivity extends AppCompatActivity {
         //Storage
         mFirebaseStorage = FirebaseStorage.getInstance();
         // Create a storage reference from our app
-        StorageReference storageImageRef = mFirebaseStorage
+        storageFilesRef  = mFirebaseStorage
                 .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
                 .child(FIREBASE_STORAGE_BUCKET_KEY_IMAGES);
 
+        //Directory store = new Directory("STORE", 1, Environment.getExternalStorageDirectory().getAbsolutePath());
+        settingsListCamera = new SettingsList();
+        settingsListPhotoEdithor = new SettingsList();
+
+        settingsListCamera
+                // Set custom camera export settings
+                .getSettingsModel(MyCameraSettings.class)
+                .setExportDir(MyDirectory.STORE, MG4_FOLDER)
+                .setExportPrefix("camera_")
+                // Set custom editor export settings
+                .getSettingsModel(MyEditorSaveSettings.class)
+                .setExportDir(MyDirectory.STORE, MG4_FOLDER)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
+                );
+
+
     }
 
+
+    public String getRealPathFromURI(Uri uri) {
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+        return cursor.getString(idx);
+    }
 
     public static Intent getIntent(Context context) {
         Intent intent = new Intent(context, ConversationActivity.class);
@@ -172,6 +231,246 @@ public class ConversationActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.chat_bar_navigation_menu, menu);
         return true;
+    }
+
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_send_file) {
+            /*
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_CODE);
+            */
+            openCamera();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void openCamera() {
+        new CameraPreviewBuilder(this)
+                .setSettingsList(settingsListCamera)
+                .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+    }
+
+    private void openPhotoEdithor(Uri uri) {
+        String myPicture = getRealPathFromURI(uri);
+        settingsListPhotoEdithor
+                .getSettingsModel(EditorLoadSettings.class)
+                .setImageSourcePath(myPicture, true) // Load with delete protection true!
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Directory.DCIM, MG4_FOLDER)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
+                );
+
+        new PhotoEditorBuilder(this)
+                .setSettingsList(settingsListPhotoEdithor)
+                .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+    }
+
+    private String sourcePath;
+    private String resultPath;
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(TAG, "Camera onActivityResult  1");
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == CAMERA_PREVIEW_RESULT) {
+            resultPath =
+                    data.getStringExtra(CameraPreviewActivity.RESULT_IMAGE_PATH);
+            sourcePath =
+                    data.getStringExtra(CameraPreviewActivity.SOURCE_IMAGE_PATH);
+
+            if (resultPath != null) {
+                // Scan result file
+                File file =  new File(resultPath);
+                Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri contentUri = Uri.fromFile(file);
+                scanIntent.setData(contentUri);
+                sendBroadcast(scanIntent);
+                //ImageView imageView new ImageView();
+                //imageView.setImageURI(contentUri);
+                storageUploadFile(file, Constantes.StorageImageContentType, storageFilesRef, myStorageListener);
+
+            }
+
+            if (sourcePath != null) {
+                // Scan camera file
+                File file =  new File(sourcePath);
+                Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri contentUri = Uri.fromFile(file);
+                scanIntent.setData(contentUri);
+
+            }
+            Toast.makeText(this, "Image Save on: " + resultPath, Toast.LENGTH_LONG).show();
+
+
+
+        }  else if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
+            Uri videoUri = data.getData();
+            //mVideoView.setVideoURI(videoUri);
+
+        }
+    }
+
+
+
+    private class MyStorageListener implements OnMyStorageProcessListener {
+        @Override
+        public void loadImageView(final ImageView imageView, StorageReference fileRef) {
+            fileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                @Override
+                public void onSuccess(StorageMetadata storageMetadata) {
+                    // Metadata now contains the metadata for 'images/forest.jpg'
+                    //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+                    Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+                    Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(imageView);
+                    ;
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Uh-oh, an error occurred!
+                }
+            });
+        }
+    }
+
+
+
+    private void storageUploadFile(File file, StorageMetadata metadata, StorageReference fileRef, final OnMyStorageProcessListener listener) {
+        try {
+            InputStream stream = new FileInputStream(file);
+
+            // Upload file and metadata to the path of file
+            UploadTask uploadTask = fileRef.putStream(stream, metadata);
+
+            // Listen for state changes, errors, and completion of the upload.
+            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    Log.d(TAG, "Upload is " + progress + "% done");
+                }
+            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                    Log.d(TAG, "Upload is paused");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.d(TAG, "Upload is Failure");
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    //// Handle successful uploads on complete
+                    //listener.loadImageView();
+                    Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
+                    Log.d(TAG, "donwloadURl: " + downloadUrl.getPath());
+
+                }
+            });
+            fileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                @Override
+                public void onSuccess(StorageMetadata storageMetadata) {
+                    // Metadata now contains the metadata for 'images/forest.jpg'
+                    //user.setMd5HashImage(storageMetadata.getMd5Hash());
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Uh-oh, an error occurred!
+                }
+            });
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Error in upload", e);
+        }
+    }
+
+    @Override
+    public void onSuccess(Object o) {
+
+    }
+
+    private File localFile;
+
+
+    private void storageDownloadFile(String filename, StorageMetadata metadata, StorageReference fileRef) {
+
+        localFile = new File(filename);
+
+        fileRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                storeProfileImage(taskSnapshot, localFile);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "Error", exception);
+            }
+        });
+    }
+
+    private void storeProfileImage(FileDownloadTask.TaskSnapshot taskSnapshot, File localFile)  {
+        Log.d(TAG, "storageDownloadFile sucess! bytes: " + taskSnapshot.getTotalByteCount());
+        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(localFile);
+        scanIntent.setData(contentUri);
+        sendBroadcast(scanIntent);
+        //ivProfile.setImageURI(contentUri);
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // If there's a download in progress, save the reference so you can query it later
+        if (storageFileRef != null) {
+            outState.putString("reference", storageFileRef.toString());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.d(TAG, "onRestoreInstanceState");
+
+        // If there was a download in progress, get its reference and create a new StorageReference
+        final String stringRef = savedInstanceState.getString("reference");
+        if (stringRef == null) {
+            return;
+        }
+        storageFileRef = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
+
+        // Find all DownloadTasks under this StorageReference (in this example, there should be one)
+        List tasks = storageFileRef.getActiveDownloadTasks();
+        if (tasks.size() > 0) {
+            // Get the task monitoring the download
+            FileDownloadTask task = (FileDownloadTask)tasks.get(0);
+
+            // Add new listeners to the task using an Activity scope
+            task.addOnSuccessListener(this, new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    Log.d(TAG, "Download sucess in onRestoreInstanceState");
+                    storeProfileImage(taskSnapshot, localFile);
+                }
+            });
+        }
     }
 
     /**
@@ -258,6 +557,21 @@ public class ConversationActivity extends AppCompatActivity {
         scrollToBottom();
     }
 
+    private void createChatMessage(Uri uri) {
+        String url = getRealPathFromURI(uri);
+        ChatMessage newMessage = new ChatMessage(mChatSettings.getUsername(), url, ChatMessage.MessageType.IMAGE);
+        newMessage.setMessageDate(GregorianCalendar.getInstance().getTime());
+
+        mChatRoomReference.push().setValue(newMessage);
+        mAdapter.add(newMessage);
+        mAdapter.notifyDataSetChanged();
+
+        scrollToBottom();
+
+        // Empty the message text box.
+        etMessage.setText("");
+    }
+
     /**
      * Scrolls the list view to the bottom.
      */
@@ -294,32 +608,67 @@ public class ConversationActivity extends AppCompatActivity {
 
             LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-            if (!message.getSenderId().equals(mChatSettings.getUsername())) {
-                row = inflater.inflate(R.layout.message_other_side, parent, false);
-            }else{
-                row = inflater.inflate(R.layout.message_mine_side, parent, false);
+            if (message.getMimeType() == ChatMessage.MessageType.TEXT) {
+                if (!message.getSenderId().equals(mChatSettings.getUsername())) {
+                    row = inflater.inflate(R.layout.message_other_text, parent, false);
+                } else {
+                    row = inflater.inflate(R.layout.message_mine_text, parent, false);
+                }
+                TextView chatText = (TextView) row.findViewById(R.id.msgr);
+                String dateFormated = "";
+                try {
+                    android.text.format.DateFormat df = new android.text.format.DateFormat();
+                    if (message.getMessageDate().getDay() == GregorianCalendar.getInstance().getTime().getDay())
+                        dateFormated = df.format("hh:mm", message.getMessageDate()).toString();
+                    else
+                        dateFormated = df.format("yyyy-MM-dd hh:mm:ss", message.getMessageDate()).toString();
+
+
+                }
+                catch (Exception ex) {
+                    Log.e(TAG, "Error en parse de fecha " + message.getMessageDate());
+                }
+
+                
+                chatText.setText(Html.fromHtml("<small align='left'>" + message.getSenderId() + "</small>" +  "<br />" +
+                        "<b align='left'>" + message.getMessage() + "</b>" +  "<br />" +
+                        "<small align='right'>" + dateFormated + "</small>"));
+            }
+            else if (message.getMimeType() == ChatMessage.MessageType.IMAGE) {
+                if (!message.getSenderId().equals(mChatSettings.getUsername())) {
+                    row = inflater.inflate(R.layout.message_other_image, parent, false);
+                } else {
+                    row = inflater.inflate(R.layout.message_mine_image, parent, false);
+                }
+
+
+                final ImageView imageView = (ImageView)row.findViewById(R.id.message_content);
+
+                storageFileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
+                    @Override
+                    public void onSuccess(StorageMetadata storageMetadata) {
+                        // Metadata now contains the metadata for 'images/forest.jpg'
+                        //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
+                        Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
+                        Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(imageView);
+                        ;
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Uh-oh, an error occurred!
+                    }
+                });
+
             }
 
-            TextView chatText = (TextView) row.findViewById(R.id.msgr);
 
 
-            String dateFormated = "";
-            try {
-                android.text.format.DateFormat df = new android.text.format.DateFormat();
-                if (message.getMessageDate().getDay() == GregorianCalendar.getInstance().getTime().getDay())
-                    dateFormated = df.format("hh:mm", message.getMessageDate()).toString();
-                else
-                    dateFormated = df.format("yyyy-MM-dd hh:mm:ss", message.getMessageDate()).toString();
 
 
-            }
-            catch (Exception ex) {
-                Log.e(TAG, "Error en parse de fecha " + message.getMessageDate());
-            }
 
-            chatText.setText(Html.fromHtml("<small align='left'>" + message.getSenderId() + "</small>" +  "<br />" +
-                    "<b align='left'>" + message.getMessage() + "</b>" +  "<br />" +
-                    "<small align='right'>" + dateFormated + "</small>"));
+
             //chatText.setText(message.getMessage());
 
             return row;
@@ -432,19 +781,7 @@ public class ConversationActivity extends AppCompatActivity {
         }
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i(TAG, "Camera onActivityResult  1");
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            ImageView mImageView = (ImageView)findViewById(R.id.ivUser);
-            mImageView.setImageBitmap(imageBitmap);
-        }
-        if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
-            Uri videoUri = data.getData();
-            //mVideoView.setVideoURI(videoUri);
-        }
-    }
+
 
     String mCurrentPhotoPath;
 
@@ -465,10 +802,21 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
 
+    //Important for Android 6.0 and above permisstion request, don't forget this!
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        PermissionRequest.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 
+    @Override
+    public void permissionGranted() {
 
+    }
 
-
-
-
+    @Override
+    public void permissionDenied() {
+        // The Permission was rejected by the user, so the Editor was not opened because it can not save the result image.
+        // TODO for you: Show a Hint to the User
+    }
 }

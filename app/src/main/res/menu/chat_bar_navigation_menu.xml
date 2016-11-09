@@ -10,7 +10,7 @@
         android:title="@string/action_create_meme"
         app:showAsAction="ifRoom"/>
     <item
-        android:id="@+id/send_file"
+        android:id="@+id/action_send_file"
         android:icon="@drawable/ic_attach_file_black_24dp"
         android:title="@string/send_file"
         app:showAsAction="ifRoom"/>

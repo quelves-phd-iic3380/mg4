@@ -34,6 +34,12 @@ public interface Constantes {
 
     public static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 101;
 
+    public static final String MG4_FOLDER = "mg4";
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_TAKE_PHOTO = 1;
+    static final int REQUEST_VIDEO_CAPTURE = 1;
+
     /**
      * Firebase Content types
      */

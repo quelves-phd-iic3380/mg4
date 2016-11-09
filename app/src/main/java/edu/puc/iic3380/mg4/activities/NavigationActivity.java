@@ -3,6 +3,9 @@ package edu.puc.iic3380.mg4.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -262,9 +266,23 @@ public class NavigationActivity extends AppCompatActivity
             }
         });
 
+    }
 
+    private void myColorTint() {
+        int tint = Color.parseColor("#FFFFFF"); // R.color.blue;
+        PorterDuff.Mode mode = PorterDuff.Mode.SRC_ATOP;
+        // add your drawable resources you wish to tint to the drawables array...
+        int drawables[] = { R.drawable.ic_format_shapes_black_24dp, R.drawable.ic_group_black_24dp };
+        for (int id : drawables) {
+            Drawable icon = getResources().getDrawable(id);
+            icon.setColorFilter(tint,mode);
+        }
+    }
 
-
+    private Drawable setTint(Drawable d, int color) {
+        Drawable wrappedDrawable = DrawableCompat.wrap(d);
+        DrawableCompat.setTint(wrappedDrawable, color);
+        return wrappedDrawable;
     }
 
     public static Intent getIntent(Context context) {
