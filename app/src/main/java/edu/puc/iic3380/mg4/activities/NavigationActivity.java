@@ -440,7 +440,7 @@ public class NavigationActivity extends AppCompatActivity
 
         }
 
-        ChatSettings chatSettings = new ChatSettings(user.getUsername(), contact.getChatRef());
+        ChatSettings chatSettings = new ChatSettings(user.getUsername(), contact.getChatRef(), user.getPhoneNumber());
         startActivity(ConversationActivity.getIntent(NavigationActivity.this, chatSettings));
     }
 

@@ -65,7 +65,7 @@ import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_PR
 import static edu.puc.iic3380.mg4.util.Constantes.GENERIC_FILE_CODE;
 import static edu.puc.iic3380.mg4.util.Constantes.PICK_IMAGE_CODE;
 
-public class ProfileActivity extends AppCompatActivity  implements PermissionRequest.Response {
+public class ProfileActivity extends MG4ActivityBase  implements PermissionRequest.Response {
     public static final String TAG = "ProfileActivity";
 
     private ProfileActivity self;
@@ -78,25 +78,7 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
     private AutoCompleteTextView mStateView;
     private AutoCompleteTextView mMessageView;
 
-
-    private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference usersRef;
-
-    private FirebaseStorage mFirebaseStorage;
-    private StorageReference storageProfileRef;
-    private StorageReference storageProfileImageRef;
-    private User user;
-    private User _user;
-
-
-    private static final String FOLDER = "ImgLy";
-
-
-    private SettingsList settingsList;
-
     private ImageView ivProfile;
-
-    private String profileImageFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,8 +93,6 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
 
         _user = getIntent().getParcelableExtra(KEY_USER);
         String phoneKey = _user.getPhoneNumber();
-
-        profileImageFilePath = MyDirectory.STORE.getPath() + "/mg4_profile_" + phoneKey + ".PNG";
 
         //Directory store = new Directory("STORE", 1, Environment.getExternalStorageDirectory().getAbsolutePath());
         settingsList = new SettingsList();
@@ -138,10 +118,6 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         mStateView = (AutoCompleteTextView) findViewById(R.id.profile_estado);
         mMessageView = (AutoCompleteTextView) findViewById(R.id.profile_message);
 
-         // Firebase initialization
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-        usersRef = mFirebaseDatabase.getReference(FIREBASE_KEY_USERS).child(phoneKey);
-        usersRef.addListenerForSingleValueEvent(new OnInitialDataLoaded());
         Button btApply = (Button) findViewById(R.id.profile_apply_action);
 
         btApply.setOnClickListener(new View.OnClickListener() {
@@ -151,18 +127,7 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
             }
         });
 
-        //Storage
-        mFirebaseStorage = FirebaseStorage.getInstance();
-
-        // Create a storage reference from our app
-        storageProfileImageRef= mFirebaseStorage
-                .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
-                .child(FIREBASE_STORAGE_BUCKET_KEY_PROFILES)
-                .child(phoneKey + ".PNG");
-
         ivProfile = (ImageView)findViewById(R.id.ivProfile);
-
-
 
         ivProfile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -240,9 +205,14 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         }
     }
 
+    @Override
+    protected void notifyAsignedUser(User user) {
+        mEmailView.setText(user.getEmail());
+        mUsernameView.setText(user.getUsername());
+        mPhoneView.setText(user.getPhoneNumber());
 
-
-
+        Log.d(TAG, "user loaded: " + user.toString());
+    }
 
     private void apply() {
         // Reset errors.
@@ -387,7 +357,25 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
                 scanIntent.setData(contentUri);
                 sendBroadcast(scanIntent);
                 ivProfile.setImageURI(contentUri);
-                storageuploadFile(file, Constantes.StorageImageContentType, storageProfileImageRef);
+
+                OnSuccessListener onSuccessListener = new OnSuccessListener<StorageMetadata>() {
+                    @Override
+                    public void onSuccess(StorageMetadata storageMetadata) {
+                        // Metadata now contains the metadata for 'images/forest.jpg'
+                        user.setMd5HashImage(storageMetadata.getMd5Hash());
+                        Toast.makeText(getApplicationContext(), "Upload Completed for " + resultPath, Toast.LENGTH_LONG).show();
+                    }
+                };
+
+                OnFailureListener onFailureListener = new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(getApplicationContext(), "Upload Failure for " + resultPath, Toast.LENGTH_LONG).show();
+
+                    }
+                };
+
+                storageUploadFile(file, Constantes.StorageImageContentType, storageProfileImageRef, onSuccessListener, onFailureListener);
 
             }
 
@@ -514,16 +502,6 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         });
     }
 
-    private void storeProfileImage(FileDownloadTask.TaskSnapshot taskSnapshot, File localFile)  {
-        Log.d(TAG, "storageDownloadFile sucess! bytes: " + taskSnapshot.getTotalByteCount());
-        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        Uri contentUri = Uri.fromFile(localFile);
-        scanIntent.setData(contentUri);
-        sendBroadcast(scanIntent);
-        ivProfile.setImageURI(contentUri);
-    }
-
-
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -563,6 +541,18 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         }
     }
 
+    private void storeProfileImage(FileDownloadTask.TaskSnapshot taskSnapshot, File localFile)  {
+        Log.d(TAG, "storageDownloadFile sucess! bytes: " + taskSnapshot.getTotalByteCount());
+        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(localFile);
+        scanIntent.setData(contentUri);
+        sendBroadcast(scanIntent);
+        ivProfile.setImageURI(contentUri);
+    }
+
+
+
+
     private void _setProfileImage() {
         try {
             File profileImageFile = new File(profileImageFilePath);
@@ -576,8 +566,8 @@ public class ProfileActivity extends AppCompatActivity  implements PermissionReq
         }
     }
 
+    @Override
+    protected void nofifyFinishedStorageUpload(StorageMetadata storageMetadata) {
 
-
-
-
+    }
 }

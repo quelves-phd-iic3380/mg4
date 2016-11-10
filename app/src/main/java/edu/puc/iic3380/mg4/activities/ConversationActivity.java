@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.UUID;
 
 import edu.puc.iic3380.mg4.BR;
 import edu.puc.iic3380.mg4.R;
@@ -78,6 +79,7 @@ import static edu.puc.iic3380.mg4.util.Constantes.CAMERA_PREVIEW_RESULT;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_BINDINGS;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_KEY_MESSAGES;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET;
+import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_FILES;
 import static edu.puc.iic3380.mg4.util.Constantes.FIREBASE_STORAGE_BUCKET_KEY_IMAGES;
 import static edu.puc.iic3380.mg4.util.Constantes.MG4_FOLDER;
 
@@ -109,6 +111,8 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
     private StorageReference storageFileRef;
     private MyStorageListener myStorageListener;
 
+    private String userLocalFilesPath;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +127,8 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(mChatSettings.getUsername());
+
+        userLocalFilesPath = MyDirectory.STORE.getPath() + "/mg4_files/";
 
         //Toolbar toolbar = (Toolbar) findViewById(R.id.tb_chat_top);
         //toolbar.setTitle(mChatSettings.getUsername());
@@ -183,7 +189,7 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
         // Create a storage reference from our app
         storageFilesRef  = mFirebaseStorage
                 .getReferenceFromUrl(FIREBASE_STORAGE_BUCKET)
-                .child(FIREBASE_STORAGE_BUCKET_KEY_IMAGES);
+                .child(FIREBASE_STORAGE_BUCKET_KEY_FILES + "/" + mChatSettings.getmUserPhone());
 
         //Directory store = new Directory("STORE", 1, Environment.getExternalStorageDirectory().getAbsolutePath());
         settingsListCamera = new SettingsList();
@@ -255,6 +261,10 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
     }
 
     private void openCamera() {
+        settingsListCamera
+        .getSettingsModel(MyEditorSaveSettings.class)
+                .setExportPrefix("")
+                .setOutputFilePath(UUID.randomUUID().toString() + ".png");
         new CameraPreviewBuilder(this)
                 .setSettingsList(settingsListCamera)
                 .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
@@ -321,7 +331,36 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
         }
     }
 
+    /**
+     * Adds a chat message to the current list of messages only if it hasn't been previously added.
+     *
+     * @param chatMessage The chat message to add.
+     */
+    private void addChatMessage(ChatMessage chatMessage) {
+        for (ChatMessage message : mMessageList) {
+            if (message.getUid().equals(chatMessage.getUid())) return;
+        }
 
+        mMessageList.add(chatMessage);
+        mAdapter.notifyDataSetChanged();
+
+        scrollToBottom();
+    }
+
+    private void createChatMessage(Uri uri) {
+        String url = getRealPathFromURI(uri);
+        ChatMessage newMessage = new ChatMessage(mChatSettings.getUsername(), url, ChatMessage.MessageType.IMAGE);
+        newMessage.setMessageDate(GregorianCalendar.getInstance().getTime());
+
+        mChatRoomReference.push().setValue(newMessage);
+        mAdapter.add(newMessage);
+        mAdapter.notifyDataSetChanged();
+
+        scrollToBottom();
+
+        // Empty the message text box.
+        etMessage.setText("");
+    }
 
     private class MyStorageListener implements OnMyStorageProcessListener {
         @Override
@@ -541,36 +580,7 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
         }
     }
 
-    /**
-     * Adds a chat message to the current list of messages only if it hasn't been previously added.
-     *
-     * @param chatMessage The chat message to add.
-     */
-    private void addChatMessage(ChatMessage chatMessage) {
-        for (ChatMessage message : mMessageList) {
-            if (message.getUid().equals(chatMessage.getUid())) return;
-        }
 
-        mMessageList.add(chatMessage);
-        mAdapter.notifyDataSetChanged();
-
-        scrollToBottom();
-    }
-
-    private void createChatMessage(Uri uri) {
-        String url = getRealPathFromURI(uri);
-        ChatMessage newMessage = new ChatMessage(mChatSettings.getUsername(), url, ChatMessage.MessageType.IMAGE);
-        newMessage.setMessageDate(GregorianCalendar.getInstance().getTime());
-
-        mChatRoomReference.push().setValue(newMessage);
-        mAdapter.add(newMessage);
-        mAdapter.notifyDataSetChanged();
-
-        scrollToBottom();
-
-        // Empty the message text box.
-        etMessage.setText("");
-    }
 
     /**
      * Scrolls the list view to the bottom.
@@ -629,7 +639,7 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
                     Log.e(TAG, "Error en parse de fecha " + message.getMessageDate());
                 }
 
-                
+
                 chatText.setText(Html.fromHtml("<small align='left'>" + message.getSenderId() + "</small>" +  "<br />" +
                         "<b align='left'>" + message.getMessage() + "</b>" +  "<br />" +
                         "<small align='right'>" + dateFormated + "</small>"));
@@ -644,22 +654,7 @@ public class ConversationActivity extends AppCompatActivity implements Permissio
 
                 final ImageView imageView = (ImageView)row.findViewById(R.id.message_content);
 
-                storageFileRef.getMetadata().addOnSuccessListener(new OnSuccessListener<StorageMetadata>() {
-                    @Override
-                    public void onSuccess(StorageMetadata storageMetadata) {
-                        // Metadata now contains the metadata for 'images/forest.jpg'
-                        //storageDownloadFile(profileImageFilePath, Constantes.StorageImageContentType, storageProfileImageRef);
-                        Log.d(TAG, "storageMetadata.getMd5Hash(): " + storageMetadata.getMd5Hash());
-                        Glide.with(getApplicationContext()).load(storageMetadata.getDownloadUrl()).into(imageView);
-                        ;
 
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Uh-oh, an error occurred!
-                    }
-                });
 
             }
 

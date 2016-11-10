@@ -19,6 +19,7 @@ public interface Constantes {
     public static final String FIREBASE_STORAGE_BUCKET = "gs://quelves-phd-iic3380-mg4.appspot.com/";
 
     public static final String FIREBASE_STORAGE_BUCKET_KEY_IMAGES = "images";
+    public static final String FIREBASE_STORAGE_BUCKET_KEY_FILES = "files";
     public static final String FIREBASE_STORAGE_BUCKET_KEY_PROFILES = "profiles";
     public static final String FIREBASE_STORAGE_BUCKET_KEY_PROFILE_IMAGE = "m4g_profile.jpg";
 

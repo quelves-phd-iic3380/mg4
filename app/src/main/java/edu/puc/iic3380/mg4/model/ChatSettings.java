@@ -11,17 +11,20 @@ import edu.puc.iic3380.mg4.BR;
 public class ChatSettings extends BaseObservable implements Parcelable {
     private String mUsername;
     private String mChatRoom;
+    private String mUserPhone;
 
 
 
-    public ChatSettings(String username, String chatRoom) {
+    public ChatSettings(String username, String chatRoom, String userPhone) {
         mUsername = username;
         mChatRoom = chatRoom;
+        mUserPhone = userPhone;
     }
 
     protected ChatSettings(Parcel in) {
         mUsername = in.readString();
         mChatRoom = in.readString();
+        mUserPhone =  in.readString();
     }
 
     @Bindable
@@ -42,6 +45,14 @@ public class ChatSettings extends BaseObservable implements Parcelable {
     public void setChatRoom(String chatRoom) {
         mChatRoom = chatRoom;
         notifyPropertyChanged(BR.chatRoom);
+    }
+
+    public String getmUserPhone() {
+        return mUserPhone;
+    }
+
+    public void setmUserPhone(String mUserPhone) {
+        this.mUserPhone = mUserPhone;
     }
 
     // Parcelable implementation
@@ -67,5 +78,6 @@ public class ChatSettings extends BaseObservable implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mUsername);
         dest.writeString(mChatRoom);
+        dest.writeString(mUserPhone);
     }
 }
